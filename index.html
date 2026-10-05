@@ -45,6 +45,26 @@
 </head>
 <body>
 
+<!-- Zone 1: Market Ticker -->
+<div id="market-ticker" class="ticker-container"></div>
+
+<!-- Zone 2: Utility Grid -->
+<div id="utility-bar" class="utility-grid">
+	<div id="weather-widget" class="utility-panel">
+		<h2>Weather & Moon</h2>
+		<div id="weather-content"></div>
+	</div>
+	<div id="news-widget" class="utility-panel">
+		<h2>News</h2>
+		<ul id="news-list"></ul>
+	</div>
+	<div id="scratchpad-widget" class="utility-panel">
+		<h2>Scratchpad</h2>
+		<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
+		<button id="scratchpad-copy">Copy</button>
+	</div>
+</div>
+
 <!--
 	URLs go here, in the following format:
 
@@ -75,6 +95,16 @@ https://www.google.com/maps || Maps
 https://mail.google.com/ || GMail
 https://domains.google/ || Domains
 https://cloud.google.com/ || Cloud
+
+<!-- Zone 4: Easter Egg & Game -->
+<div id="easter-egg-trigger" aria-hidden="true"></div>
+<div id="game-overlay">
+	<canvas id="breakout-canvas" width="480" height="320"></canvas>
+</div>
+
+<!-- Scripts -->
+<script type="text/javascript" src="app.js"></script>
+<script type="text/javascript" src="breakout.js"></script>
 
 </body>
 </html>

@@ -5,6 +5,75 @@
  * Initializes market ticker, weather & moon phase, news headlines, and persistent scratchpad.
  */
 
+/* Ensure DOM elements exist */
+function ensureElements() {
+	// Check if market-ticker exists, if not create it
+	if (!document.getElementById('market-ticker')) {
+		const ticker = document.createElement('div');
+		ticker.id = 'market-ticker';
+		ticker.className = 'ticker-container';
+		document.body.insertBefore(ticker, document.body.firstChild);
+	}
+	
+	// Check if utility-bar exists, if not create it
+	if (!document.getElementById('utility-bar')) {
+		const utilityBar = document.createElement('div');
+		utilityBar.id = 'utility-bar';
+		utilityBar.className = 'utility-grid';
+		
+		const weatherWidget = document.createElement('div');
+		weatherWidget.id = 'weather-widget';
+		weatherWidget.className = 'utility-panel';
+		weatherWidget.innerHTML = '<h2>Weather & Moon</h2><div id="weather-content"></div>';
+		
+		const newsWidget = document.createElement('div');
+		newsWidget.id = 'news-widget';
+		newsWidget.className = 'utility-panel';
+		newsWidget.innerHTML = '<h2>News</h2><ul id="news-list"></ul>';
+		
+		const scratchpadWidget = document.createElement('div');
+		scratchpadWidget.id = 'scratchpad-widget';
+		scratchpadWidget.className = 'utility-panel';
+		scratchpadWidget.innerHTML = `
+			<h2>Scratchpad</h2>
+			<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
+			<button id="scratchpad-copy">Copy</button>
+		`;
+		
+		utilityBar.appendChild(weatherWidget);
+		utilityBar.appendChild(newsWidget);
+		utilityBar.appendChild(scratchpadWidget);
+		
+		// Insert after market ticker
+		const ticker = document.getElementById('market-ticker');
+		if (ticker) {
+			ticker.parentNode.insertBefore(utilityBar, ticker.nextSibling);
+		} else {
+			document.body.insertBefore(utilityBar, document.body.firstChild);
+		}
+	}
+	
+	// Check if game overlay exists, if not create it
+	if (!document.getElementById('game-overlay')) {
+		const overlay = document.createElement('div');
+		overlay.id = 'game-overlay';
+		const canvas = document.createElement('canvas');
+		canvas.id = 'breakout-canvas';
+		canvas.width = 480;
+		canvas.height = 320;
+		overlay.appendChild(canvas);
+		document.body.appendChild(overlay);
+	}
+	
+	// Check if easter-egg-trigger exists, if not create it
+	if (!document.getElementById('easter-egg-trigger')) {
+		const trigger = document.createElement('div');
+		trigger.id = 'easter-egg-trigger';
+		trigger.setAttribute('aria-hidden', 'true');
+		document.body.appendChild(trigger);
+	}
+}
+
 /* Vanguard Market Ticker */
 function initTicker() {
 	const symbols = ['VOO', 'VTI', 'VOX', 'VCR', 'VDC', 'VDE', 'VFH', 'VHT', 'VIS', 'VGT', 'VAW', 'VNQ', 'VPU'];
@@ -214,6 +283,7 @@ function initScratchpad() {
 
 /* Initialize all modules when DOM is ready */
 document.addEventListener('DOMContentLoaded', function() {
+	ensureElements();
 	initTicker();
 	initWeather();
 	initNews();

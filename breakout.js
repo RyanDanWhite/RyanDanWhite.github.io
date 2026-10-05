@@ -12,7 +12,27 @@ class BreakoutGame {
 		this.overlay = document.getElementById('game-overlay');
 		this.trigger = document.getElementById('easter-egg-trigger');
 		
-		if (!this.canvas || !this.overlay || !this.trigger) return;
+		// Create elements if they don't exist
+		if (!this.trigger) {
+			this.trigger = document.createElement('div');
+			this.trigger.id = 'easter-egg-trigger';
+			this.trigger.setAttribute('aria-hidden', 'true');
+			document.body.appendChild(this.trigger);
+		}
+		
+		if (!this.overlay) {
+			this.overlay = document.createElement('div');
+			this.overlay.id = 'game-overlay';
+			document.body.appendChild(this.overlay);
+		}
+		
+		if (!this.canvas) {
+			this.canvas = document.createElement('canvas');
+			this.canvas.id = 'breakout-canvas';
+			this.canvas.width = 480;
+			this.canvas.height = 320;
+			this.overlay.appendChild(this.canvas);
+		}
 		
 		this.ctx = this.canvas.getContext('2d');
 		this.width = this.canvas.width;
@@ -256,5 +276,8 @@ class BreakoutGame {
 
 // Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-	new BreakoutGame();
+	// Delay initialization to ensure existing scripts have run
+	setTimeout(() => {
+		new BreakoutGame();
+	}, 100);
 });

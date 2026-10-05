@@ -3,49 +3,94 @@
  * ========================================
  * 
  * Initializes market ticker, weather & moon phase, news headlines, and persistent scratchpad.
+ * New layout: 2-column (2/3 left with weather/scratchpad/flyout menus, 1/3 right with search/news/stocks)
  */
+
+// Bookmark data structure
+const bookmarkData = {
+	'about-ryan-white': {
+		label: 'About Ryan White',
+		links: []
+	},
+	'shopping': {
+		label: 'Shopping',
+		links: []
+	},
+	'tech': {
+		label: 'Tech',
+		links: []
+	},
+	'the-googles': {
+		label: 'The Googles',
+		links: []
+	}
+};
 
 /* Ensure DOM elements exist and integrate with script.js output */
 function ensureElements() {
-	// Check and create container structure
-	if (!document.getElementById('main-container')) {
-		const container = document.createElement('div');
-		container.id = 'main-container';
-		document.body.insertBefore(container, document.body.firstChild);
+	// Check and create left panel
+	if (!document.getElementById('left-panel')) {
+		const leftPanel = document.createElement('div');
+		leftPanel.id = 'left-panel';
+		document.getElementById('main-container').insertBefore(leftPanel, document.getElementById('main-container').firstChild);
 	}
 
-	const mainContainer = document.getElementById('main-container');
+	const leftPanel = document.getElementById('left-panel');
 
-	// Ensure upper area exists
-	if (!document.getElementById('upper-area')) {
-		const upperArea = document.createElement('div');
-		upperArea.id = 'upper-area';
-		mainContainer.insertBefore(upperArea, mainContainer.firstChild);
-	}
-
-	const upperArea = document.getElementById('upper-area');
-
-	// Ensure main panel exists
-	if (!document.getElementById('main-panel')) {
-		const mainPanel = document.createElement('div');
-		mainPanel.id = 'main-panel';
-		upperArea.appendChild(mainPanel);
-	}
-
-	// Ensure weather widget exists
+	// Ensure weather widget exists in left panel
 	if (!document.getElementById('weather-widget')) {
 		const weatherWidget = document.createElement('div');
 		weatherWidget.id = 'weather-widget';
 		weatherWidget.className = 'utility-panel';
-		weatherWidget.innerHTML = '<h2>Weather & Moon</h2><div id="weather-content"></div>';
-		document.getElementById('main-panel').appendChild(weatherWidget);
+		weatherWidget.innerHTML = '<div id="weather-content"></div>';
+		leftPanel.appendChild(weatherWidget);
+	}
+
+	// Ensure scratchpad widget exists in left panel
+	if (!document.getElementById('scratchpad-widget')) {
+		const scratchpadWidget = document.createElement('div');
+		scratchpadWidget.id = 'scratchpad-widget';
+		scratchpadWidget.className = 'utility-panel';
+		scratchpadWidget.innerHTML = `
+			<h2>Scratchpad</h2>
+			<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
+			<button id="scratchpad-copy">Copy</button>
+		`;
+		leftPanel.appendChild(scratchpadWidget);
+	}
+
+	// Ensure flyout menu exists
+	if (!document.getElementById('flyout-menu')) {
+		const flyoutMenu = document.createElement('div');
+		flyoutMenu.id = 'flyout-menu';
+		const buttons = [
+			{ id: 'about-ryan-white', label: 'About Ryan White' },
+			{ id: 'shopping', label: 'Shopping' },
+			{ id: 'tech', label: 'Tech' },
+			{ id: 'the-googles', label: 'The Googles' }
+		];
+		buttons.forEach(btn => {
+			const button = document.createElement('button');
+			button.className = 'flyout-toggle';
+			button.setAttribute('data-section', btn.id);
+			button.textContent = btn.label;
+			flyoutMenu.appendChild(button);
+		});
+		leftPanel.appendChild(flyoutMenu);
+	}
+
+	// Ensure flyout panels container exists
+	if (!document.getElementById('flyout-panels')) {
+		const flyoutPanels = document.createElement('div');
+		flyoutPanels.id = 'flyout-panels';
+		leftPanel.appendChild(flyoutPanels);
 	}
 
 	// Ensure right sidebar exists
 	if (!document.getElementById('right-sidebar')) {
 		const rightSidebar = document.createElement('div');
 		rightSidebar.id = 'right-sidebar';
-		upperArea.appendChild(rightSidebar);
+		document.getElementById('main-container').appendChild(rightSidebar);
 	}
 
 	const rightSidebar = document.getElementById('right-sidebar');
@@ -77,26 +122,6 @@ function ensureElements() {
 		rightSidebar.appendChild(ticker);
 	}
 
-	// Ensure scratchpad widget exists
-	if (!document.getElementById('scratchpad-widget')) {
-		const scratchpadWidget = document.createElement('div');
-		scratchpadWidget.id = 'scratchpad-widget';
-		scratchpadWidget.className = 'utility-panel';
-		scratchpadWidget.innerHTML = `
-			<h2>Scratchpad</h2>
-			<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
-			<button id="scratchpad-copy">Copy</button>
-		`;
-		rightSidebar.appendChild(scratchpadWidget);
-	}
-
-	// Ensure bookmark columns container exists
-	if (!document.getElementById('bookmark-columns')) {
-		const bookmarkColumns = document.createElement('div');
-		bookmarkColumns.id = 'bookmark-columns';
-		mainContainer.appendChild(bookmarkColumns);
-	}
-
 	// Ensure game overlay exists
 	if (!document.getElementById('game-overlay')) {
 		const overlay = document.createElement('div');
@@ -118,258 +143,327 @@ function ensureElements() {
 	}
 }
 
-/* Reorganize script.js output: move bookmark blocks to bookmark-columns container */
+/* Reorganize script.js output: extract links and populate bookmarks */
 function reorganizeBookmarks() {
 	const bookmarkColumns = document.getElementById('bookmark-columns');
-	if (!bookmarkColumns) return;
+	if (bookmarkColumns) {
+		bookmarkColumns.remove();
+	}
 
-	// Move all .block elements (generated by script.js) to bookmark-columns
+	// Extract bookmark blocks from script.js
 	const blocks = document.querySelectorAll('body > .block');
 	blocks.forEach(block => {
-		bookmarkColumns.appendChild(block);
+		const h1 = block.querySelector('h1');
+		if (!h1) return;
+
+		const title = h1.textContent.trim();
+		let sectionId = null;
+
+		// Map block titles to section IDs
+		if (title === 'About Ryan White') sectionId = 'about-ryan-white';
+		else if (title === 'Shopping') sectionId = 'shopping';
+		else if (title === 'Tech') sectionId = 'tech';
+		else if (title === 'The Googles') sectionId = 'the-googles';
+
+		if (sectionId && bookmarkData[sectionId]) {
+			// Extract links from this block
+			const links = block.querySelectorAll('a');
+			links.forEach(link => {
+				bookmarkData[sectionId].links.push({
+					href: link.href,
+					text: link.textContent.trim()
+				});
+			});
+		}
+
+		// Remove the block element
+		block.remove();
 	});
 
-	// Move all #searches form elements to search-boxes container
-	const searchBoxes = document.getElementById('search-boxes');
-	if (searchBoxes) {
-		const searches = document.getElementById('searches');
-		if (searches) {
+	// Remove the searches div
+	const searches = document.getElementById('searches');
+	if (searches) {
+		const searchBoxes = document.getElementById('search-boxes');
+		if (searchBoxes) {
 			const forms = searches.querySelectorAll('form');
-			// Only keep Google and Wikipedia
+			// Only keep Google (index 0) and Wikipedia (index 3)
 			forms.forEach((form, index) => {
-				// Keep first 2 (Google and Images), skip to Wikipedia (index 3)
 				if (index === 0 || index === 3) {
 					searchBoxes.appendChild(form.cloneNode(true));
 				}
 			});
-			searches.remove();
 		}
+		searches.remove();
 	}
 
-	// Move clock to footer area if needed
-	const clock = document.getElementById('clock');
-	if (clock && !document.getElementById('main-container').contains(clock)) {
-		// Clock will stay where it is (absolute positioning)
-	}
+	// Populate flyout panels with bookmark links
+	populateFlyoutPanels();
 }
 
-/* Vanguard Market Ticker */
+/* Create flyout panel HTML for each bookmark section */
+function populateFlyoutPanels() {
+	const flyoutPanels = document.getElementById('flyout-panels');
+	if (!flyoutPanels) return;
+
+	Object.keys(bookmarkData).forEach(sectionId => {
+		const section = bookmarkData[sectionId];
+		if (section.links.length === 0) return;
+
+		const panel = document.createElement('div');
+		panel.className = 'flyout-panel';
+		panel.setAttribute('data-section', sectionId);
+
+		const ul = document.createElement('ul');
+		section.links.forEach(link => {
+			const li = document.createElement('li');
+			const a = document.createElement('a');
+			a.href = link.href;
+			a.textContent = link.text;
+			a.target = '_blank';
+			a.rel = 'noopener noreferrer';
+			li.appendChild(a);
+			ul.appendChild(li);
+		});
+
+		panel.appendChild(ul);
+		flyoutPanels.appendChild(panel);
+	});
+
+	// Add flyout toggle listeners
+	setupFlyoutToggle();
+}
+
+/* Setup flyout menu toggle functionality */
+function setupFlyoutToggle() {
+	const buttons = document.querySelectorAll('.flyout-toggle');
+	const flyoutPanels = document.getElementById('flyout-panels');
+
+	buttons.forEach(button => {
+		button.addEventListener('click', function(e) {
+			e.preventDefault();
+			const sectionId = this.getAttribute('data-section');
+			const isActive = this.classList.contains('active');
+
+			// Remove active state from all buttons
+			buttons.forEach(btn => btn.classList.remove('active'));
+
+			// Remove active state from all panels
+			const panels = document.querySelectorAll('.flyout-panel');
+			panels.forEach(panel => panel.classList.remove('active'));
+
+			// If clicking same button, just toggle off
+			if (isActive) {
+				this.classList.remove('active');
+				flyoutPanels.classList.remove('active');
+			} else {
+				// Show the clicked section
+				this.classList.add('active');
+				const targetPanel = document.querySelector(`.flyout-panel[data-section="${sectionId}"]`);
+				if (targetPanel) {
+					targetPanel.classList.add('active');
+					flyoutPanels.classList.add('active');
+				}
+			}
+		});
+	});
+
+	// Close flyout when clicking outside
+	document.addEventListener('click', function(e) {
+		if (!e.target.closest('#flyout-menu') && !e.target.closest('#flyout-panels')) {
+			buttons.forEach(btn => btn.classList.remove('active'));
+			const panels = document.querySelectorAll('.flyout-panel');
+			panels.forEach(panel => panel.classList.remove('active'));
+			flyoutPanels.classList.remove('active');
+		}
+	});
+}
+
+/* Initialize Vanguard Market Ticker */
 function initTicker() {
 	const symbols = ['VOO', 'VTI', 'VOX', 'VCR', 'VDC', 'VDE', 'VFH', 'VHT', 'VIS', 'VGT', 'VAW', 'VNQ', 'VPU'];
-	const tickerContainer = document.getElementById('market-ticker');
-	
-	if (!tickerContainer) return;
+	const ticker = document.getElementById('market-ticker');
+	if (!ticker) return;
 
-	// Find or create ticker items container
-	let itemsContainer = tickerContainer.querySelector('.ticker-items');
-	if (!itemsContainer) {
-		itemsContainer = document.createElement('div');
-		itemsContainer.className = 'ticker-items';
-		
-		for (const symbol of symbols) {
-			const item = document.createElement('div');
-			item.className = 'ticker-item';
-			item.innerHTML = `
-				<span class="ticker-symbol">${symbol}</span>
-				<span class="ticker-price">--</span>
-				<span class="ticker-change">--</span>
-			`;
-			itemsContainer.appendChild(item);
-		}
-		
-		tickerContainer.appendChild(itemsContainer);
-	}
+	// For now, show as dashes (placeholder)
+	// In production, fetch from a financial API
+	const tickerContent = document.createElement('div');
+	tickerContent.id = 'ticker-content';
+
+	symbols.forEach(symbol => {
+		const item = document.createElement('div');
+		item.className = 'ticker-item';
+		item.innerHTML = `<span class="ticker-symbol">${symbol}</span><span class="ticker-price">--</span><span class="ticker-change">--</span>`;
+		tickerContent.appendChild(item);
+	});
+
+	ticker.appendChild(tickerContent);
 }
 
-/* Weather & Moon Phase */
-function initWeather() {
-	const weatherWidget = document.getElementById('weather-content');
-	
-	if (!weatherWidget) return;
-	
-	weatherWidget.innerHTML = '<div style="color: #666; font-size: 11px;">Loading weather...</div>';
-	
-	const latitude = 41.6528;
-	const longitude = -83.5379;
-	const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York`;
-	
-	fetch(url)
-		.then(response => response.json())
-		.then(data => {
-			const current = data.current;
-			const daily = data.daily;
-			
-			// Map WMO weather codes to conditions
-			const weatherCodeMap = {
-				0: 'Clear', 1: 'Mostly Clear', 2: 'Partly Cloudy', 3: 'Cloudy',
-				45: 'Foggy', 48: 'Foggy', 51: 'Light Drizzle', 53: 'Drizzle', 55: 'Heavy Drizzle',
-				61: 'Slight Rain', 63: 'Rain', 65: 'Heavy Rain', 71: 'Slight Snow', 73: 'Snow',
-				75: 'Heavy Snow', 77: 'Snow Grains', 80: 'Rain Showers', 81: 'Heavy Showers',
-				82: 'Violent Showers', 85: 'Snow Showers', 86: 'Heavy Snow Showers', 95: 'Thunderstorm'
-			};
-			
-			const getCondition = (code) => weatherCodeMap[code] || 'Unknown';
-			
-			// Calculate moon phase
-			const moonPhase = calculateMoonPhase();
-			
-			let html = `
-				<div class="weather-section">
-					<span class="weather-label">Now:</span>
-					<span>${Math.round(current.temperature_2m)}°F, ${getCondition(current.weather_code)}</span>
-				</div>
-				<div class="weather-section">
-					<span class="weather-label">Today:</span>
-					<span>${Math.round(daily.temperature_2m_max[0])}°/${Math.round(daily.temperature_2m_min[0])}° | ${daily.precipitation_probability_max[0]}% rain</span>
-				</div>
-				<div class="weather-section">
-					<span class="weather-label">Tomorrow:</span>
-					<span>${Math.round(daily.temperature_2m_max[1])}°/${Math.round(daily.temperature_2m_min[1])}° | ${daily.precipitation_probability_max[1]}% rain</span>
-				</div>
-				<div class="weather-section">
-					<span class="weather-label">Moon:</span>
-					<span>${moonPhase}</span>
-				</div>
-			`;
-			
-			weatherWidget.innerHTML = html;
-		})
-		.catch(error => {
-			console.log('Weather data unavailable:', error);
-			weatherWidget.innerHTML = `
-				<div class="weather-section">
-					<span class="weather-label">Weather:</span>
-					<span>Unavailable</span>
-				</div>
-			`;
-		});
-}
-
-/* Calculate Moon Phase */
+/* Calculate moon phase */
 function calculateMoonPhase() {
-	const moonPhases = [
-		'🌑 New Moon', '🌒 Waxing Crescent', '🌓 First Quarter',
-		'🌔 Waxing Gibbous', '🌕 Full Moon', '🌖 Waning Gibbous',
-		'🌗 Last Quarter', '🌘 Waning Crescent'
-	];
-	
-	const now = new Date();
-	const epoch = new Date('2000-01-06T18:14:00Z');
-	const daysElapsed = (now - epoch) / (1000 * 60 * 60 * 24);
-	const dayInCycle = daysElapsed % 29.53058867;
-	const phaseIndex = Math.floor((dayInCycle / 29.53058867) * 8) % 8;
-	
-	return moonPhases[phaseIndex];
+	const knownNewMoonEpoch = 947163600000; // January 6, 2000, 18:14 UTC
+	const lunarCycle = 29.53058867; // days
+	const now = Date.now();
+	const daysSinceEpoch = (now - knownNewMoonEpoch) / 86400000;
+	const daysInCycle = daysSinceEpoch % lunarCycle;
+	const phaseIndex = Math.floor((daysInCycle / lunarCycle) * 8);
+
+	const phases = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
+		'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'];
+	return phases[phaseIndex] || 'Unknown';
 }
 
-/* Top 3 News Headlines - IMPROVED PARSER */
-function initNews() {
-	const newsList = document.getElementById('news-list');
-	
-	if (!newsList) return;
-	
-	newsList.innerHTML = '<li style="color: #666; font-size: 11px;">Loading headlines...</li>';
-	
-	// Google News RSS - most reliable and direct
-	const rssUrl = 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en';
-	const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=3`;
-	
-	fetch(apiUrl, {
-		method: 'GET',
-		headers: {
-			'Accept': 'application/json'
-		}
-	})
-		.then(response => {
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			return response.json();
-		})
+/* Initialize Weather & Moon */
+function initWeather() {
+	const weatherContent = document.getElementById('weather-content');
+	if (!weatherContent) return;
+
+	const lat = 41.6528;
+	const lon = -83.5379;
+	const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York`;
+
+	fetch(url)
+		.then(r => r.json())
 		.then(data => {
-			console.log('News API Response:', data);
-			
-			if (!data.items || data.items.length === 0) {
-				newsList.innerHTML = '<li style="color: #666; font-size: 11px;">No headlines available</li>';
+			if (!data.current) {
+				weatherContent.textContent = 'Weather unavailable';
 				return;
 			}
 
-			let html = '';
-			let validCount = 0;
-			
-			for (let i = 0; i < data.items.length && validCount < 3; i++) {
-				const item = data.items[i];
-				
-				// Extract title and link from various possible formats
-				let title = item.title || item.description || '';
-				let link = item.link || item.url || item.guid || '';
-				
-				// Clean up title
-				if (title) {
-					title = title
-						.replace(/[\s-]+AP[\s-]*$/i, '')
-						.replace(/[\s-]+BBC[\s-]*$/i, '')
-						.replace(/[\s-]+Reuters[\s-]*$/i, '')
-						.replace(/^[\s-]*/, '');
-				}
-				
-				if (title && title.trim() && link) {
-					html += `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a></li>`;
-					validCount++;
-				}
-			}
-			
-			if (html) {
-				newsList.innerHTML = html;
-			} else {
-				newsList.innerHTML = '<li style="color: #666; font-size: 11px;">No valid headlines found</li>';
-			}
+			const current = data.current;
+			const daily = data.daily;
+
+			const wmoToText = (code) => {
+				if (code === 0 || code === 1) return 'Clear';
+				if (code === 2) return 'Cloudy';
+				if (code === 3) return 'Overcast';
+				if (code >= 45) return 'Foggy';
+				if (code >= 80) return 'Rain';
+				if (code >= 70) return 'Snow';
+				return 'Unknown';
+			};
+
+			const now = new Date();
+			const today = 0;
+			const tomorrow = 1;
+
+			let html = `
+				<div class="weather-section">
+					<span class="weather-label">Now:</span>
+					<span>${current.temperature_2m}°F, ${wmoToText(current.weather_code)}</span>
+				</div>
+				<div class="weather-section">
+					<span class="weather-label">Today:</span>
+					<span>${daily.temperature_2m_max[today]}°/${daily.temperature_2m_min[today]}°, ${daily.precipitation_probability_max[today]}% rain</span>
+				</div>
+				<div class="weather-section">
+					<span class="weather-label">Tomorrow:</span>
+					<span>${daily.temperature_2m_max[tomorrow]}°/${daily.temperature_2m_min[tomorrow]}°, ${daily.precipitation_probability_max[tomorrow]}% rain</span>
+				</div>
+				<div class="weather-section">
+					<span class="weather-label">Moon:</span>
+					<span>${calculateMoonPhase()}</span>
+				</div>
+			`;
+
+			weatherContent.innerHTML = html;
 		})
-		.catch(error => {
-			console.log('News fetch error:', error);
-			newsList.innerHTML = '<li style="color: #666; font-size: 11px;">Headlines unavailable</li>';
+		.catch(e => {
+			console.error('Weather fetch error:', e);
+			weatherContent.textContent = 'Weather unavailable';
 		});
 }
 
-/* Persistent Scratchpad */
+/* Initialize News Headlines */
+function initNews() {
+	const newsList = document.getElementById('news-list');
+	if (!newsList) return;
+
+	const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=when:24h+allinurl:apnews.com&hl=en-US&gl=US&ceid=US:en');
+	const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+
+	fetch(proxyUrl)
+		.then(r => r.json())
+		.then(data => {
+			console.log('News API Response:', data);
+
+			if (!data.items || data.items.length === 0) {
+				newsList.innerHTML = '<li>No headlines available</li>';
+				return;
+			}
+
+			const headlines = data.items.slice(0, 3);
+			let validCount = 0;
+
+			newsList.innerHTML = '';
+			headlines.forEach(item => {
+				const title = item.title || item.description || '';
+				const link = item.link || item.url || item.guid || '#';
+
+				if (title.trim()) {
+					// Clean up source suffix
+					let cleanTitle = title.replace(/\s*-\s*AP News.*$/i, '').trim();
+					cleanTitle = cleanTitle.replace(/\s*-\s*Google News.*$/i, '').trim();
+
+					const li = document.createElement('li');
+					const a = document.createElement('a');
+					a.href = link;
+					a.textContent = cleanTitle;
+					a.target = '_blank';
+					a.rel = 'noopener noreferrer';
+					li.appendChild(a);
+					newsList.appendChild(li);
+					validCount++;
+				}
+			});
+
+			if (validCount === 0) {
+				newsList.innerHTML = '<li>No valid headlines found</li>';
+			}
+		})
+		.catch(e => {
+			console.error('News fetch error:', e);
+			newsList.innerHTML = '<li>Headlines unavailable</li>';
+		});
+}
+
+/* Initialize Persistent Scratchpad */
 function initScratchpad() {
 	const textarea = document.getElementById('scratchpad-input');
 	const copyBtn = document.getElementById('scratchpad-copy');
-	
+
 	if (!textarea) return;
-	
+
 	// Load from localStorage
 	const saved = localStorage.getItem('dash_scratchpad');
 	if (saved) {
 		textarea.value = saved;
 	}
-	
-	// Save on input
-	textarea.addEventListener('input', function() {
-		localStorage.setItem('dash_scratchpad', this.value);
+
+	// Save to localStorage on input
+	textarea.addEventListener('input', (e) => {
+		localStorage.setItem('dash_scratchpad', e.target.value);
 	});
-	
+
 	// Copy button
 	if (copyBtn) {
-		copyBtn.addEventListener('click', async function() {
-			try {
-				await navigator.clipboard.writeText(textarea.value);
+		copyBtn.addEventListener('click', () => {
+			navigator.clipboard.writeText(textarea.value).then(() => {
 				const originalText = copyBtn.textContent;
 				copyBtn.textContent = 'Copied!';
 				setTimeout(() => {
 					copyBtn.textContent = originalText;
 				}, 2000);
-			} catch (error) {
-				console.log('Copy failed:', error);
-				alert('Failed to copy to clipboard');
-			}
+			});
 		});
 	}
 }
 
 /* Initialize all modules when DOM is ready */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
 	ensureElements();
-	
-	// Wait for script.js to finish building the page
+
+	// Wait for script.js to finish, then reorganize
 	setTimeout(() => {
 		reorganizeBookmarks();
 		initTicker();

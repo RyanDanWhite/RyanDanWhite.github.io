@@ -45,35 +45,43 @@
 </head>
 <body>
 
-<!-- Main Content Container -->
+<!-- Main Content Container: 2-Column Layout (2/3 left + 1/3 right) -->
 <div id="main-container">
-	<!-- Upper Main Area: Weather Widget (Wide) + Scratchpad (Sidebar) -->
-	<div id="upper-area">
-		<div id="main-panel">
-			<div id="weather-widget" class="utility-panel">
-				<h2>Weather & Moon</h2>
-				<div id="weather-content"></div>
-			</div>
+	<!-- LEFT PANEL (2/3): Weather + Scratchpad + Flyout Menus -->
+	<div id="left-panel">
+		<!-- Weather Widget -->
+		<div id="weather-widget" class="utility-panel">
+			<div id="weather-content"></div>
 		</div>
 		
-		<div id="right-sidebar">
-			<!-- Right Sidebar: Search boxes, News, Stock Ticker -->
-			<div id="search-boxes"></div>
-			<div id="news-widget" class="utility-panel">
-				<h2>News</h2>
-				<ul id="news-list"></ul>
-			</div>
-			<div id="market-ticker" class="ticker-panel"></div>
-			<div id="scratchpad-widget" class="utility-panel">
-				<h2>Scratchpad</h2>
-				<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
-				<button id="scratchpad-copy">Copy</button>
-			</div>
+		<!-- Scratchpad Panel -->
+		<div id="scratchpad-widget" class="utility-panel">
+			<h2>Scratchpad</h2>
+			<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
+			<button id="scratchpad-copy">Copy</button>
 		</div>
+		
+		<!-- Flyout Menu Container -->
+		<div id="flyout-menu">
+			<button class="flyout-toggle" data-section="about-ryan-white">About Ryan White</button>
+			<button class="flyout-toggle" data-section="shopping">Shopping</button>
+			<button class="flyout-toggle" data-section="tech">Tech</button>
+			<button class="flyout-toggle" data-section="the-googles">The Googles</button>
+		</div>
+		
+		<!-- Flyout Panels (Hidden by default, shown on toggle) -->
+		<div id="flyout-panels"></div>
 	</div>
-
-	<!-- Lower Area: Bookmark Columns (Only original 4: About, Shopping, Tech, Googles) -->
-	<div id="bookmark-columns"></div>
+	
+	<!-- RIGHT PANEL (1/3): Search, News, Stocks -->
+	<div id="right-sidebar">
+		<div id="search-boxes"></div>
+		<div id="news-widget" class="utility-panel">
+			<h2>News</h2>
+			<ul id="news-list"></ul>
+		</div>
+		<div id="market-ticker" class="ticker-panel"></div>
+	</div>
 </div>
 
 <!--

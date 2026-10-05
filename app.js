@@ -5,32 +5,80 @@
  * Initializes market ticker, weather & moon phase, news headlines, and persistent scratchpad.
  */
 
-/* Ensure DOM elements exist */
+/* Ensure DOM elements exist and integrate with script.js output */
 function ensureElements() {
-	// Check if market-ticker exists, if not create it
-	if (!document.getElementById('market-ticker')) {
-		const ticker = document.createElement('div');
-		ticker.id = 'market-ticker';
-		ticker.className = 'ticker-container';
-		document.body.insertBefore(ticker, document.body.firstChild);
+	// Check and create container structure
+	if (!document.getElementById('main-container')) {
+		const container = document.createElement('div');
+		container.id = 'main-container';
+		document.body.insertBefore(container, document.body.firstChild);
 	}
-	
-	// Check if utility-bar exists, if not create it
-	if (!document.getElementById('utility-bar')) {
-		const utilityBar = document.createElement('div');
-		utilityBar.id = 'utility-bar';
-		utilityBar.className = 'utility-grid';
-		
+
+	const mainContainer = document.getElementById('main-container');
+
+	// Ensure upper area exists
+	if (!document.getElementById('upper-area')) {
+		const upperArea = document.createElement('div');
+		upperArea.id = 'upper-area';
+		mainContainer.insertBefore(upperArea, mainContainer.firstChild);
+	}
+
+	const upperArea = document.getElementById('upper-area');
+
+	// Ensure main panel exists
+	if (!document.getElementById('main-panel')) {
+		const mainPanel = document.createElement('div');
+		mainPanel.id = 'main-panel';
+		upperArea.appendChild(mainPanel);
+	}
+
+	// Ensure weather widget exists
+	if (!document.getElementById('weather-widget')) {
 		const weatherWidget = document.createElement('div');
 		weatherWidget.id = 'weather-widget';
 		weatherWidget.className = 'utility-panel';
 		weatherWidget.innerHTML = '<h2>Weather & Moon</h2><div id="weather-content"></div>';
-		
+		document.getElementById('main-panel').appendChild(weatherWidget);
+	}
+
+	// Ensure right sidebar exists
+	if (!document.getElementById('right-sidebar')) {
+		const rightSidebar = document.createElement('div');
+		rightSidebar.id = 'right-sidebar';
+		upperArea.appendChild(rightSidebar);
+	}
+
+	const rightSidebar = document.getElementById('right-sidebar');
+
+	// Ensure search boxes container exists
+	if (!document.getElementById('search-boxes')) {
+		const searchBoxes = document.createElement('div');
+		searchBoxes.id = 'search-boxes';
+		rightSidebar.insertBefore(searchBoxes, rightSidebar.firstChild);
+	}
+
+	// Ensure news widget exists
+	if (!document.getElementById('news-widget')) {
 		const newsWidget = document.createElement('div');
 		newsWidget.id = 'news-widget';
 		newsWidget.className = 'utility-panel';
 		newsWidget.innerHTML = '<h2>News</h2><ul id="news-list"></ul>';
-		
+		rightSidebar.appendChild(newsWidget);
+	}
+
+	// Ensure market ticker exists
+	if (!document.getElementById('market-ticker')) {
+		const ticker = document.createElement('div');
+		ticker.id = 'market-ticker';
+		ticker.className = 'ticker-panel';
+		const tickerH2 = document.createElement('h2');
+		tickerH2.textContent = 'Stocks';
+		ticker.appendChild(tickerH2);
+		rightSidebar.appendChild(ticker);
+	}
+
+	// Ensure scratchpad widget exists
+	if (!document.getElementById('scratchpad-widget')) {
 		const scratchpadWidget = document.createElement('div');
 		scratchpadWidget.id = 'scratchpad-widget';
 		scratchpadWidget.className = 'utility-panel';
@@ -39,21 +87,17 @@ function ensureElements() {
 			<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
 			<button id="scratchpad-copy">Copy</button>
 		`;
-		
-		utilityBar.appendChild(weatherWidget);
-		utilityBar.appendChild(newsWidget);
-		utilityBar.appendChild(scratchpadWidget);
-		
-		// Insert after market ticker
-		const ticker = document.getElementById('market-ticker');
-		if (ticker) {
-			ticker.parentNode.insertBefore(utilityBar, ticker.nextSibling);
-		} else {
-			document.body.insertBefore(utilityBar, document.body.firstChild);
-		}
+		rightSidebar.appendChild(scratchpadWidget);
 	}
-	
-	// Check if game overlay exists, if not create it
+
+	// Ensure bookmark columns container exists
+	if (!document.getElementById('bookmark-columns')) {
+		const bookmarkColumns = document.createElement('div');
+		bookmarkColumns.id = 'bookmark-columns';
+		mainContainer.appendChild(bookmarkColumns);
+	}
+
+	// Ensure game overlay exists
 	if (!document.getElementById('game-overlay')) {
 		const overlay = document.createElement('div');
 		overlay.id = 'game-overlay';
@@ -64,13 +108,48 @@ function ensureElements() {
 		overlay.appendChild(canvas);
 		document.body.appendChild(overlay);
 	}
-	
-	// Check if easter-egg-trigger exists, if not create it
+
+	// Ensure easter-egg-trigger exists
 	if (!document.getElementById('easter-egg-trigger')) {
 		const trigger = document.createElement('div');
 		trigger.id = 'easter-egg-trigger';
 		trigger.setAttribute('aria-hidden', 'true');
 		document.body.appendChild(trigger);
+	}
+}
+
+/* Reorganize script.js output: move bookmark blocks to bookmark-columns container */
+function reorganizeBookmarks() {
+	const bookmarkColumns = document.getElementById('bookmark-columns');
+	if (!bookmarkColumns) return;
+
+	// Move all .block elements (generated by script.js) to bookmark-columns
+	const blocks = document.querySelectorAll('body > .block');
+	blocks.forEach(block => {
+		bookmarkColumns.appendChild(block);
+	});
+
+	// Move all #searches form elements to search-boxes container
+	const searchBoxes = document.getElementById('search-boxes');
+	if (searchBoxes) {
+		const searches = document.getElementById('searches');
+		if (searches) {
+			const forms = searches.querySelectorAll('form');
+			// Only keep Google and Wikipedia
+			forms.forEach((form, index) => {
+				// Keep first 2 (Google and Images), skip to Wikipedia (index 3)
+				if (index === 0 || index === 3) {
+					searchBoxes.appendChild(form.cloneNode(true));
+				}
+			});
+			searches.remove();
+		}
+	}
+
+	// Move clock to footer area if needed
+	const clock = document.getElementById('clock');
+	if (clock && !document.getElementById('main-container').contains(clock)) {
+		// Clock will stay where it is (absolute positioning)
 	}
 }
 
@@ -80,51 +159,26 @@ function initTicker() {
 	const tickerContainer = document.getElementById('market-ticker');
 	
 	if (!tickerContainer) return;
-	
-	// Create a loading placeholder
-	tickerContainer.innerHTML = '<div class="ticker-item"><span style="color: #666; font-size: 11px;">Loading market data...</span></div>';
-	
-	// Try to fetch from a CORS-friendly endpoint
-	const fetchQuotes = async () => {
-		try {
-			// Using finnhub-like free endpoint or fallback to static format
-			const promises = symbols.map(symbol => 
-				fetch(`https://api.example.com/quote/${symbol}`)
-					.catch(() => ({ ok: false }))
-			);
-			
-			const results = await Promise.allSettled(promises);
-			let html = '';
-			
-			for (const symbol of symbols) {
-				// Fallback to dashes when API fails
-				html += `
-					<div class="ticker-item">
-						<span class="ticker-symbol">${symbol}</span>
-						<span class="ticker-price">--</span>
-						<span class="ticker-change">--</span>
-					</div>
-				`;
-			}
-			
-			tickerContainer.innerHTML = html;
-		} catch (error) {
-			console.log('Ticker data unavailable');
-			let html = '';
-			for (const symbol of symbols) {
-				html += `
-					<div class="ticker-item">
-						<span class="ticker-symbol">${symbol}</span>
-						<span class="ticker-price">--</span>
-						<span class="ticker-change">--</span>
-					</div>
-				`;
-			}
-			tickerContainer.innerHTML = html;
+
+	// Find or create ticker items container
+	let itemsContainer = tickerContainer.querySelector('.ticker-items');
+	if (!itemsContainer) {
+		itemsContainer = document.createElement('div');
+		itemsContainer.className = 'ticker-items';
+		
+		for (const symbol of symbols) {
+			const item = document.createElement('div');
+			item.className = 'ticker-item';
+			item.innerHTML = `
+				<span class="ticker-symbol">${symbol}</span>
+				<span class="ticker-price">--</span>
+				<span class="ticker-change">--</span>
+			`;
+			itemsContainer.appendChild(item);
 		}
-	};
-	
-	fetchQuotes();
+		
+		tickerContainer.appendChild(itemsContainer);
+	}
 }
 
 /* Weather & Moon Phase */
@@ -208,7 +262,7 @@ function calculateMoonPhase() {
 	return moonPhases[phaseIndex];
 }
 
-/* Top 3 News Headlines */
+/* Top 3 News Headlines - IMPROVED PARSER */
 function initNews() {
 	const newsList = document.getElementById('news-list');
 	
@@ -216,31 +270,61 @@ function initNews() {
 	
 	newsList.innerHTML = '<li style="color: #666; font-size: 11px;">Loading headlines...</li>';
 	
-	// Using rss2json API to proxy AP News headlines
-	const rssUrl = 'https://news.google.com/rss/search?q=when:24h+allinurl:apnews.com&hl=en-US&gl=US&ceid=US:en';
-	const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+	// Google News RSS - most reliable and direct
+	const rssUrl = 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en';
+	const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=3`;
 	
-	fetch(apiUrl)
-		.then(response => response.json())
+	fetch(apiUrl, {
+		method: 'GET',
+		headers: {
+			'Accept': 'application/json'
+		}
+	})
+		.then(response => {
+			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+			return response.json();
+		})
 		.then(data => {
-			const items = data.items ? data.items.slice(0, 3) : [];
+			console.log('News API Response:', data);
 			
-			if (items.length === 0) {
+			if (!data.items || data.items.length === 0) {
 				newsList.innerHTML = '<li style="color: #666; font-size: 11px;">No headlines available</li>';
 				return;
 			}
-			
+
 			let html = '';
-			for (const item of items) {
-				const title = item.title.replace(' - AP News', '').replace(' - AP', '').replace(' - Associated Press', '');
-				const link = item.link;
-				html += `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a></li>`;
+			let validCount = 0;
+			
+			for (let i = 0; i < data.items.length && validCount < 3; i++) {
+				const item = data.items[i];
+				
+				// Extract title and link from various possible formats
+				let title = item.title || item.description || '';
+				let link = item.link || item.url || item.guid || '';
+				
+				// Clean up title
+				if (title) {
+					title = title
+						.replace(/[\s-]+AP[\s-]*$/i, '')
+						.replace(/[\s-]+BBC[\s-]*$/i, '')
+						.replace(/[\s-]+Reuters[\s-]*$/i, '')
+						.replace(/^[\s-]*/, '');
+				}
+				
+				if (title && title.trim() && link) {
+					html += `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a></li>`;
+					validCount++;
+				}
 			}
 			
-			newsList.innerHTML = html;
+			if (html) {
+				newsList.innerHTML = html;
+			} else {
+				newsList.innerHTML = '<li style="color: #666; font-size: 11px;">No valid headlines found</li>';
+			}
 		})
 		.catch(error => {
-			console.log('News data unavailable:', error);
+			console.log('News fetch error:', error);
 			newsList.innerHTML = '<li style="color: #666; font-size: 11px;">Headlines unavailable</li>';
 		});
 }
@@ -284,8 +368,13 @@ function initScratchpad() {
 /* Initialize all modules when DOM is ready */
 document.addEventListener('DOMContentLoaded', function() {
 	ensureElements();
-	initTicker();
-	initWeather();
-	initNews();
-	initScratchpad();
+	
+	// Wait for script.js to finish building the page
+	setTimeout(() => {
+		reorganizeBookmarks();
+		initTicker();
+		initWeather();
+		initNews();
+		initScratchpad();
+	}, 50);
 });

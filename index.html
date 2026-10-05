@@ -45,24 +45,35 @@
 </head>
 <body>
 
-<!-- Zone 1: Market Ticker -->
-<div id="market-ticker" class="ticker-container"></div>
+<!-- Main Content Container -->
+<div id="main-container">
+	<!-- Upper Main Area: Weather Widget (Wide) + Scratchpad (Sidebar) -->
+	<div id="upper-area">
+		<div id="main-panel">
+			<div id="weather-widget" class="utility-panel">
+				<h2>Weather & Moon</h2>
+				<div id="weather-content"></div>
+			</div>
+		</div>
+		
+		<div id="right-sidebar">
+			<!-- Right Sidebar: Search boxes, News, Stock Ticker -->
+			<div id="search-boxes"></div>
+			<div id="news-widget" class="utility-panel">
+				<h2>News</h2>
+				<ul id="news-list"></ul>
+			</div>
+			<div id="market-ticker" class="ticker-panel"></div>
+			<div id="scratchpad-widget" class="utility-panel">
+				<h2>Scratchpad</h2>
+				<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
+				<button id="scratchpad-copy">Copy</button>
+			</div>
+		</div>
+	</div>
 
-<!-- Zone 2: Utility Grid -->
-<div id="utility-bar" class="utility-grid">
-	<div id="weather-widget" class="utility-panel">
-		<h2>Weather & Moon</h2>
-		<div id="weather-content"></div>
-	</div>
-	<div id="news-widget" class="utility-panel">
-		<h2>News</h2>
-		<ul id="news-list"></ul>
-	</div>
-	<div id="scratchpad-widget" class="utility-panel">
-		<h2>Scratchpad</h2>
-		<textarea id="scratchpad-input" placeholder="Quick notes..."></textarea>
-		<button id="scratchpad-copy">Copy</button>
-	</div>
+	<!-- Lower Area: Bookmark Columns (Only original 4: About, Shopping, Tech, Googles) -->
+	<div id="bookmark-columns"></div>
 </div>
 
 <!--

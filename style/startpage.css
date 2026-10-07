@@ -337,3 +337,62 @@ body {
     background: var(--color-surface-active);
     color: var(--color-text-bright);
 }
+/* ==========================================================================
+   BREAKOUT EASTER EGG
+   ========================================================================== */
+
+/* Subtle clickable square in the bottom-right corner */
+
+#easter-egg-trigger {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+
+    width: 24px;
+    height: 24px;
+
+    background: #161616;
+
+    cursor: pointer;
+}
+
+
+/* Full-screen game overlay */
+
+#game-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.9);
+}
+
+
+/* breakout.js adds this class when the game starts */
+
+#game-overlay.active {
+    display: flex;
+}
+
+
+/* Game canvas */
+
+#breakout-canvas {
+    display: block;
+
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    height: auto;
+
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+
+    background: #000000;
+
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}

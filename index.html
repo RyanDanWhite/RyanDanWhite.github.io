@@ -368,6 +368,345 @@
     ></div>
 </section>
 
+<!-- Fingerprint Mirror -->
+<section
+    id="fingerprint-panel"
+    aria-label="Fingerprint Mirror"
+>
+    <div class="fingerprint-header">
+        <h2>Fingerprint Mirror</h2>
+
+        <button
+            id="fingerprint-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="fingerprint-content"
+        >
+            Expand
+        </button>
+    </div>
+
+    <div
+        id="fingerprint-content"
+        hidden
+    >
+        <p class="fingerprint-notice">
+            Values are generated locally unless you choose Look up my IP.
+        </p>
+
+        <div
+            id="fingerprint-list"
+            class="fingerprint-list"
+        >
+            <!-- Browser and system -->
+            <h3 class="fingerprint-group-heading">
+                Browser and system
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    1. Browser and version
+                </div>
+                <div
+                    id="fingerprint-browserAndVersion"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    2. OS and version
+                </div>
+                <div
+                    id="fingerprint-osAndVersion"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    3. CPU architecture
+                </div>
+                <div
+                    id="fingerprint-cpuArchitecture"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    4. Languages
+                </div>
+                <div
+                    id="fingerprint-languages"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Display -->
+            <h3 class="fingerprint-group-heading">
+                Display
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    5. Screen resolution
+                </div>
+                <div
+                    id="fingerprint-screenResolution"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    6. Available screen
+                </div>
+                <div
+                    id="fingerprint-availableScreen"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    7. Window size
+                </div>
+                <div
+                    id="fingerprint-windowSize"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    8. Pixel ratio
+                </div>
+                <div
+                    id="fingerprint-pixelRatio"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Hardware -->
+            <h3 class="fingerprint-group-heading">
+                Hardware
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    9. CPU core count
+                </div>
+                <div
+                    id="fingerprint-cpuCoreCount"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    10. Device memory
+                </div>
+                <div
+                    id="fingerprint-deviceMemory"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    11. GPU renderer
+                </div>
+                <div
+                    id="fingerprint-gpuRenderer"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    12. Touch support
+                </div>
+                <div
+                    id="fingerprint-touchSupport"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Locale -->
+            <h3 class="fingerprint-group-heading">
+                Locale
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    13. Timezone and UTC offset
+                </div>
+                <div
+                    id="fingerprint-timezoneAndOffset"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Fingerprint hashes -->
+            <h3 class="fingerprint-group-heading">
+                Fingerprint hashes
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    14. Canvas hash
+                </div>
+                <div
+                    id="fingerprint-canvasHash"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    15. Audio hash
+                </div>
+                <div
+                    id="fingerprint-audioHash"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Privacy settings -->
+            <h3 class="fingerprint-group-heading">
+                Privacy settings
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    16. DNT and GPC
+                </div>
+                <div
+                    id="fingerprint-privacySignals"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    17. Cookies and storage
+                </div>
+                <div
+                    id="fingerprint-cookiesAndStorage"
+                    class="fingerprint-value"
+                >
+                    not available
+                </div>
+            </div>
+
+            <!-- Network -->
+            <h3 class="fingerprint-group-heading">
+                Network
+            </h3>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    18. Public IP
+                </div>
+                <div
+                    id="fingerprint-publicIp"
+                    class="fingerprint-value"
+                >
+                    not looked up
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    19. Approximate location
+                </div>
+                <div
+                    id="fingerprint-approximateLocation"
+                    class="fingerprint-value"
+                >
+                    not looked up
+                </div>
+            </div>
+
+            <div class="fingerprint-row">
+                <div class="fingerprint-label">
+                    20. ISP and ASN
+                </div>
+                <div
+                    id="fingerprint-ispAndAsn"
+                    class="fingerprint-value"
+                >
+                    not looked up
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="fingerprint-actions">
+            <button
+                id="fingerprint-rescan"
+                type="button"
+            >
+                Rescan
+            </button>
+
+            <button
+                id="fingerprint-copy"
+                type="button"
+            >
+                Copy as JSON
+            </button>
+
+            <button
+                id="fingerprint-ip-lookup"
+                type="button"
+            >
+                Look up my IP
+            </button>
+        </div>
+
+        <div
+            id="fingerprint-status"
+            class="fingerprint-status"
+            role="status"
+            aria-live="polite"
+        ></div>
+    </div>
+</section>
+
             <!-- Clock -->
 
             <div
@@ -384,6 +723,7 @@
 <script src="js/startpage.js"></script>
 <script src="js/breakout.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/fingerprint.js"></script>
 
 </body>
 

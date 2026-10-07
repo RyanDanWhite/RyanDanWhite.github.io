@@ -1,1667 +1,642 @@
 "use strict";
 
-/* ==========================================================================
-   FINGERPRINT MIRROR
-   ========================================================================== */
+(() => {
+    const NOT_AVAILABLE = "not available";
+    const NOT_LOOKED_UP = "not looked up";
 
-const NOT_AVAILABLE = "not available";
-const NOT_LOOKED_UP = "not looked up";
-
-const fingerprintState = {
-    browserAndVersion: NOT_AVAILABLE,
-    osAndVersion: NOT_AVAILABLE,
-    cpuArchitecture: NOT_AVAILABLE,
-    languages: NOT_AVAILABLE,
-
-    screenResolution: NOT_AVAILABLE,
-    availableScreen: NOT_AVAILABLE,
-    windowSize: NOT_AVAILABLE,
-    pixelRatio: NOT_AVAILABLE,
-
-    cpuCoreCount: NOT_AVAILABLE,
-    deviceMemory: NOT_AVAILABLE,
-    gpuRenderer: NOT_AVAILABLE,
-    touchSupport: NOT_AVAILABLE,
-
-    timezoneAndOffset: NOT_AVAILABLE,
-
-    canvasHash: NOT_AVAILABLE,
-    audioHash: NOT_AVAILABLE,
-
-    privacySignals: NOT_AVAILABLE,
-    cookiesAndStorage: NOT_AVAILABLE,
-
-    publicIp: NOT_LOOKED_UP,
-    approximateLocation: NOT_LOOKED_UP,
-    ispAndAsn: NOT_LOOKED_UP
-};
-
-const fingerprintItems = [
-    {
-        number: 1,
-        key: "browserAndVersion",
-        label: "Browser and version"
-    },
-    {
-        number: 2,
-        key: "osAndVersion",
-        label: "OS and version"
-    },
-    {
-        number: 3,
-        key: "cpuArchitecture",
-        label: "CPU architecture"
-    },
-    {
-        number: 4,
-        key: "languages",
-        label: "Languages"
-    },
-    {
-        number: 5,
-        key: "screenResolution",
-        label: "Screen resolution"
-    },
-    {
-        number: 6,
-        key: "availableScreen",
-        label: "Available screen"
-    },
-    {
-        number: 7,
-        key: "windowSize",
-        label: "Window size"
-    },
-    {
-        number: 8,
-        key: "pixelRatio",
-        label: "Pixel ratio"
-    },
-    {
-        number: 9,
-        key: "cpuCoreCount",
-        label: "CPU core count"
-    },
-    {
-        number: 10,
-        key: "deviceMemory",
-        label: "Device memory"
-    },
-    {
-        number: 11,
-        key: "gpuRenderer",
-        label: "GPU renderer"
-    },
-    {
-        number: 12,
-        key: "touchSupport",
-        label: "Touch support"
-    },
-    {
-        number: 13,
-        key: "timezoneAndOffset",
-        label: "Timezone and UTC offset"
-    },
-    {
-        number: 14,
-        key: "canvasHash",
-        label: "Canvas hash"
-    },
-    {
-        number: 15,
-        key: "audioHash",
-        label: "Audio hash"
-    },
-    {
-        number: 16,
-        key: "privacySignals",
-        label: "Do Not Track and Global Privacy Control"
-    },
-    {
-        number: 17,
-        key: "cookiesAndStorage",
-        label: "Cookies and storage availability"
-    },
-    {
-        number: 18,
-        key: "publicIp",
-        label: "Public IP"
-    },
-    {
-        number: 19,
-        key: "approximateLocation",
-        label: "Approximate location"
-    },
-    {
-        number: 20,
-        key: "ispAndAsn",
-        label: "ISP and ASN"
-    }
-];
-
-/* ==========================================================================
-   INITIALIZATION
-   ========================================================================== */
-
-if (document.readyState === "loading") {
-    document.addEventListener(
-        "DOMContentLoaded",
-        initializeFingerprintMirror
-    );
-} else {
-    initializeFingerprintMirror();
-}
-
-function initializeFingerprintMirror() {
-    const panel = document.getElementById(
-        "fingerprint-panel"
-    );
-
-    if (!panel) {
-        console.warn(
-            "Fingerprint Mirror could not find #fingerprint-panel."
-        );
-        return;
-    }
-
-    const rescanButton = document.getElementById(
-        "fingerprint-rescan"
-    );
-
-    const copyButton = document.getElementById(
-        "fingerprint-copy"
-    );
-
-    const ipButton = document.getElementById(
-        "fingerprint-ip-lookup"
-    );
-
-    if (rescanButton) {
-        rescanButton.addEventListener(
-            "click",
-            scanFingerprint
-        );
-    }
-
-    if (copyButton) {
-        copyButton.addEventListener(
-            "click",
-            copyFingerprintAsJson
-        );
-    }
-
-    if (ipButton) {
-        ipButton.addEventListener(
-            "click",
-            lookUpPublicIp
-        );
-    }
-
-    renderFingerprintState();
-    scanFingerprint();
-}
-
-/* ==========================================================================
-   MAIN LOCAL SCAN
-   ========================================================================== */
-
-async function scanFingerprint() {
-    const rescanButton = document.getElementById(
-        "fingerprint-rescan"
-    );
-
-    if (rescanButton) {
-        rescanButton.disabled = true;
-        rescanButton.textContent = "Scanning...";
-    }
-
-    setFingerprintStatus(
-        "Scanning browser and system..."
-    );
-
-    try {
-        const browserData =
-            await getBrowserAndSystemData();
-
-        setFingerprintValue(
-            "browserAndVersion",
-            browserData.browserAndVersion
-        );
-
-        setFingerprintValue(
-            "osAndVersion",
-            browserData.osAndVersion
-        );
-
-        setFingerprintValue(
-            "cpuArchitecture",
-            browserData.cpuArchitecture
-        );
-
-        setFingerprintValue(
-            "languages",
-            getLanguages()
-        );
-
-        setFingerprintValue(
-            "screenResolution",
-            getScreenResolution()
-        );
-
-        setFingerprintValue(
-            "availableScreen",
-            getAvailableScreen()
-        );
-
-        setFingerprintValue(
-            "windowSize",
-            getWindowSize()
-        );
-
-        setFingerprintValue(
-            "pixelRatio",
-            getPixelRatio()
-        );
-
-        setFingerprintValue(
-            "cpuCoreCount",
-            getCpuCoreCount()
-        );
-
-        setFingerprintValue(
-            "deviceMemory",
-            getDeviceMemory()
-        );
-
-        setFingerprintValue(
-            "gpuRenderer",
-            getGpuRenderer()
-        );
-
-        setFingerprintValue(
-            "touchSupport",
-            getTouchSupport()
-        );
-
-        setFingerprintValue(
-            "timezoneAndOffset",
-            getTimezoneAndOffset()
-        );
-
-        setFingerprintValue(
-            "privacySignals",
-            getPrivacySignals()
-        );
-
-        setFingerprintValue(
-            "cookiesAndStorage",
-            getCookiesAndStorage()
-        );
-
-        setFingerprintValue(
-            "canvasHash",
-            "calculating..."
-        );
-
-        setFingerprintValue(
-            "audioHash",
-            "calculating..."
-        );
-
-        const hashResults =
-            await Promise.allSettled([
-                createCanvasHash(),
-                createAudioHash()
-            ]);
-
-        const canvasResult = hashResults[0];
-        const audioResult = hashResults[1];
-
-        setFingerprintValue(
-            "canvasHash",
-            canvasResult.status === "fulfilled"
-                ? canvasResult.value
-                : NOT_AVAILABLE
-        );
-
-        setFingerprintValue(
-            "audioHash",
-            audioResult.status === "fulfilled"
-                ? audioResult.value
-                : NOT_AVAILABLE
-        );
-
-        setFingerprintStatus("Scan complete.");
-    } catch (error) {
-        console.error(
-            "Fingerprint scan failed:",
-            error
-        );
-
-        setFingerprintStatus(
-            "The scan completed with unavailable values."
-        );
-    } finally {
-        if (rescanButton) {
-            rescanButton.disabled = false;
-            rescanButton.textContent = "Rescan";
-        }
-    }
-}
-
-/* ==========================================================================
-   BROWSER AND SYSTEM
-   ========================================================================== */
-
-async function getBrowserAndSystemData() {
-    const fallback = parseUserAgent(
-        navigator.userAgent || ""
-    );
-
-    const result = {
-        browserAndVersion:
-            fallback.browserAndVersion,
-
-        osAndVersion:
-            fallback.osAndVersion,
-
-        cpuArchitecture:
-            fallback.cpuArchitecture
+    const state = {
+        browserAndVersion: NOT_AVAILABLE,
+        osAndVersion: NOT_AVAILABLE,
+        cpuArchitecture: NOT_AVAILABLE,
+        languages: NOT_AVAILABLE,
+        screenResolution: NOT_AVAILABLE,
+        availableScreen: NOT_AVAILABLE,
+        windowSize: NOT_AVAILABLE,
+        pixelRatio: NOT_AVAILABLE,
+        cpuCoreCount: NOT_AVAILABLE,
+        deviceMemory: NOT_AVAILABLE,
+        gpuRenderer: NOT_AVAILABLE,
+        touchSupport: NOT_AVAILABLE,
+        timezoneAndOffset: NOT_AVAILABLE,
+        canvasHash: NOT_AVAILABLE,
+        audioHash: NOT_AVAILABLE,
+        privacySignals: NOT_AVAILABLE,
+        cookiesAndStorage: NOT_AVAILABLE,
+        publicIp: NOT_LOOKED_UP,
+        approximateLocation: NOT_LOOKED_UP,
+        ispAndAsn: NOT_LOOKED_UP
     };
 
-    const userAgentData = navigator.userAgentData;
+    const labels = {
+        browserAndVersion: "Browser and version",
+        osAndVersion: "OS and version",
+        cpuArchitecture: "CPU architecture",
+        languages: "Languages",
+        screenResolution: "Screen resolution",
+        availableScreen: "Available screen",
+        windowSize: "Window size",
+        pixelRatio: "Pixel ratio",
+        cpuCoreCount: "CPU core count",
+        deviceMemory: "Device memory",
+        gpuRenderer: "GPU renderer",
+        touchSupport: "Touch support",
+        timezoneAndOffset: "Timezone and UTC offset",
+        canvasHash: "Canvas hash",
+        audioHash: "Audio hash",
+        privacySignals: "Do Not Track and Global Privacy Control",
+        cookiesAndStorage: "Cookies and storage availability",
+        publicIp: "Public IP",
+        approximateLocation: "Approximate location",
+        ispAndAsn: "ISP and ASN"
+    };
 
-    if (
-        !userAgentData ||
-        typeof userAgentData.getHighEntropyValues !==
-            "function"
-    ) {
-        return result;
+    function initialize() {
+        const panel = document.getElementById("fingerprint-panel");
+
+        if (!panel) {
+            console.warn("Fingerprint Mirror panel was not found.");
+            return;
+        }
+
+        document
+            .getElementById("fingerprint-rescan")
+            ?.addEventListener("click", scan);
+
+        document
+            .getElementById("fingerprint-copy")
+            ?.addEventListener("click", copyAsJson);
+
+        document
+            .getElementById("fingerprint-ip-lookup")
+            ?.addEventListener("click", lookupIp);
+
+        renderAll();
+        scan();
     }
 
-    try {
-        const values =
-            await userAgentData.getHighEntropyValues([
-                "architecture",
-                "bitness",
-                "fullVersionList",
-                "platform",
-                "platformVersion",
-                "uaFullVersion",
-                "wow64"
-            ]);
+    async function scan() {
+        const button = document.getElementById("fingerprint-rescan");
 
-        const browser =
-            getBrowserFromClientHints(
-                values,
-                userAgentData
-            );
-
-        if (browser !== NOT_AVAILABLE) {
-            result.browserAndVersion = browser;
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Scanning...";
         }
 
-        const operatingSystem =
-            formatClientHintOperatingSystem(
-                values.platform ||
-                    userAgentData.platform,
-                values.platformVersion
-            );
+        setStatus("Scanning...");
 
-        if (operatingSystem !== NOT_AVAILABLE) {
-            result.osAndVersion =
-                operatingSystem;
+        setValue("browserAndVersion", getBrowser());
+        setValue("osAndVersion", getOperatingSystem());
+        setValue("cpuArchitecture", getArchitecture());
+        setValue("languages", getLanguages());
+
+        setValue("screenResolution", getScreenResolution());
+        setValue("availableScreen", getAvailableScreen());
+        setValue("windowSize", getWindowSize());
+        setValue("pixelRatio", getPixelRatio());
+
+        setValue("cpuCoreCount", getCpuCoreCount());
+        setValue("deviceMemory", getDeviceMemory());
+        setValue("gpuRenderer", getGpuRenderer());
+        setValue("touchSupport", getTouchSupport());
+
+        setValue("timezoneAndOffset", getTimezone());
+        setValue("privacySignals", getPrivacySignals());
+        setValue("cookiesAndStorage", getStorageStatus());
+
+        setValue("canvasHash", "calculating...");
+        setValue("audioHash", "calculating...");
+
+        const canvasHash = await safelyRun(createCanvasHash);
+        const audioHash = await safelyRun(createAudioHash);
+
+        setValue("canvasHash", canvasHash);
+        setValue("audioHash", audioHash);
+
+        setStatus("Scan complete.");
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Rescan";
         }
-
-        const architecture =
-            formatClientHintArchitecture(
-                values.architecture,
-                values.bitness,
-                values.wow64
-            );
-
-        if (architecture !== NOT_AVAILABLE) {
-            result.cpuArchitecture =
-                architecture;
-        }
-    } catch (error) {
-        console.warn(
-            "User-Agent Client Hints were unavailable:",
-            error
-        );
     }
 
-    return result;
-}
-
-function getBrowserFromClientHints(
-    values,
-    userAgentData
-) {
-    const brands =
-        values.fullVersionList ||
-        userAgentData.brands ||
-        [];
-
-    const usableBrands = brands.filter(
-        (entry) => {
-            return (
-                entry &&
-                entry.brand &&
-                !/not.?a.?brand/i.test(
-                    entry.brand
-                )
-            );
+    async function safelyRun(operation) {
+        try {
+            const result = await operation();
+            return result || NOT_AVAILABLE;
+        } catch (error) {
+            console.warn("Fingerprint check unavailable:", error);
+            return NOT_AVAILABLE;
         }
-    );
-
-    const edge = usableBrands.find(
-        (entry) => {
-            return /microsoft edge/i.test(
-                entry.brand
-            );
-        }
-    );
-
-    if (edge) {
-        return `Microsoft Edge ${edge.version}`;
     }
 
-    const opera = usableBrands.find(
-        (entry) => {
-            return /opera/i.test(
-                entry.brand
-            );
-        }
-    );
+    /* ======================================================================
+       BROWSER AND SYSTEM
+       ====================================================================== */
 
-    if (opera) {
-        return `Opera ${opera.version}`;
-    }
+    function getBrowser() {
+        const userAgent = navigator.userAgent || "";
 
-    const chrome = usableBrands.find(
-        (entry) => {
-            return /google chrome/i.test(
-                entry.brand
-            );
-        }
-    );
+        const patterns = [
+            ["Microsoft Edge", /Edg\/([\d.]+)/],
+            ["Opera", /OPR\/([\d.]+)/],
+            ["Firefox", /Firefox\/([\d.]+)/],
+            ["Google Chrome", /Chrome\/([\d.]+)/],
+            ["Safari", /Version\/([\d.]+).*Safari/]
+        ];
 
-    if (chrome) {
-        return `Google Chrome ${chrome.version}`;
-    }
+        for (const [name, pattern] of patterns) {
+            const match = userAgent.match(pattern);
 
-    const chromium = usableBrands.find(
-        (entry) => {
-            return /^chromium$/i.test(
-                entry.brand
-            );
-        }
-    );
-
-    if (chromium) {
-        return `Chromium ${chromium.version}`;
-    }
-
-    return NOT_AVAILABLE;
-}
-
-function formatClientHintOperatingSystem(
-    platform,
-    platformVersion
-) {
-    if (!platform) {
-        return NOT_AVAILABLE;
-    }
-
-    if (platform === "Windows") {
-        if (!platformVersion) {
-            return "Windows";
-        }
-
-        const majorVersion = Number.parseInt(
-            platformVersion.split(".")[0],
-            10
-        );
-
-        if (Number.isFinite(majorVersion)) {
-            if (majorVersion >= 13) {
-                return "Windows 11";
-            }
-
-            if (majorVersion > 0) {
-                return "Windows 10";
+            if (match) {
+                return `${name} ${match[1]}`;
             }
         }
 
-        return "Windows";
+        return NOT_AVAILABLE;
     }
 
-    if (!platformVersion) {
-        return platform;
-    }
+    function getOperatingSystem() {
+        const userAgent = navigator.userAgent || "";
 
-    return `${platform} ${platformVersion}`;
-}
+        const android = userAgent.match(/Android ([\d.]+)/);
 
-function formatClientHintArchitecture(
-    architecture,
-    bitness,
-    wow64
-) {
-    const parts = [];
-
-    if (architecture) {
-        parts.push(architecture);
-    }
-
-    if (bitness) {
-        parts.push(`${bitness}-bit`);
-    }
-
-    if (wow64 === true) {
-        parts.push("WOW64");
-    }
-
-    return parts.length
-        ? parts.join(" · ")
-        : NOT_AVAILABLE;
-}
-
-function parseUserAgent(userAgent) {
-    return {
-        browserAndVersion:
-            getBrowserFromUserAgent(userAgent),
-
-        osAndVersion:
-            getOperatingSystemFromUserAgent(
-                userAgent
-            ),
-
-        cpuArchitecture:
-            getArchitectureFromUserAgent(
-                userAgent
-            )
-    };
-}
-
-function getBrowserFromUserAgent(userAgent) {
-    const browserPatterns = [
-        {
-            name: "Microsoft Edge",
-            expression: /Edg\/([\d.]+)/
-        },
-        {
-            name: "Opera",
-            expression: /OPR\/([\d.]+)/
-        },
-        {
-            name: "Firefox",
-            expression: /Firefox\/([\d.]+)/
-        },
-        {
-            name: "Google Chrome",
-            expression: /Chrome\/([\d.]+)/
-        },
-        {
-            name: "Safari",
-            expression:
-                /Version\/([\d.]+).*Safari/
+        if (android) {
+            return `Android ${android[1]}`;
         }
-    ];
 
-    for (const browser of browserPatterns) {
-        const match = userAgent.match(
-            browser.expression
+        const ios = userAgent.match(
+            /(?:iPhone OS|CPU OS) ([\d_]+)/
         );
 
-        if (match) {
-            return (
-                `${browser.name} ` +
-                `${match[1]}`
-            );
+        if (ios) {
+            return `iOS ${ios[1].replaceAll("_", ".")}`;
         }
-    }
 
-    return NOT_AVAILABLE;
-}
+        const macOS = userAgent.match(/Mac OS X ([\d_]+)/);
 
-function getOperatingSystemFromUserAgent(
-    userAgent
-) {
-    const androidMatch =
-        userAgent.match(
-            /Android ([\d.]+)/
-        );
+        if (macOS) {
+            return `macOS ${macOS[1].replaceAll("_", ".")}`;
+        }
 
-    if (androidMatch) {
-        return `Android ${androidMatch[1]}`;
-    }
+        if (/Windows NT 10\.0/.test(userAgent)) {
+            return "Windows 10 or 11";
+        }
 
-    const iosMatch = userAgent.match(
-        /(?:iPhone OS|CPU OS) ([\d_]+)/
-    );
+        if (/Windows NT 6\.3/.test(userAgent)) {
+            return "Windows 8.1";
+        }
 
-    if (iosMatch) {
-        return (
-            `iOS ` +
-            `${iosMatch[1].replaceAll(
-                "_",
-                "."
-            )}`
-        );
-    }
+        if (/Windows NT 6\.1/.test(userAgent)) {
+            return "Windows 7";
+        }
 
-    const windowsMatch =
-        userAgent.match(
-            /Windows NT ([\d.]+)/
-        );
+        if (/Linux/.test(userAgent)) {
+            return "Linux";
+        }
 
-    if (windowsMatch) {
-        const windowsVersions = {
-            "10.0": "Windows 10 or later",
-            "6.3": "Windows 8.1",
-            "6.2": "Windows 8",
-            "6.1": "Windows 7"
-        };
-
-        return (
-            windowsVersions[
-                windowsMatch[1]
-            ] ||
-            `Windows NT ${
-                windowsMatch[1]
-            }`
-        );
-    }
-
-    const macMatch =
-        userAgent.match(
-            /Mac OS X ([\d_]+)/
-        );
-
-    if (macMatch) {
-        return (
-            `macOS ` +
-            `${macMatch[1].replaceAll(
-                "_",
-                "."
-            )}`
-        );
-    }
-
-    if (/Linux/i.test(userAgent)) {
-        return "Linux";
-    }
-
-    return NOT_AVAILABLE;
-}
-
-function getArchitectureFromUserAgent(
-    userAgent
-) {
-    if (/arm64|aarch64/i.test(userAgent)) {
-        return "ARM64";
-    }
-
-    if (/arm/i.test(userAgent)) {
-        return "ARM";
-    }
-
-    if (
-        /x86_64|win64|x64|amd64/i.test(
-            userAgent
-        )
-    ) {
-        return "x86-64";
-    }
-
-    if (/i[3-6]86|x86/i.test(userAgent)) {
-        return "x86";
-    }
-
-    return NOT_AVAILABLE;
-}
-
-function getLanguages() {
-    if (
-        Array.isArray(navigator.languages) &&
-        navigator.languages.length
-    ) {
-        return navigator.languages.join(", ");
-    }
-
-    return (
-        navigator.language ||
-        NOT_AVAILABLE
-    );
-}
-
-/* ==========================================================================
-   DISPLAY
-   ========================================================================== */
-
-function getScreenResolution() {
-    if (
-        !window.screen ||
-        !Number.isFinite(
-            window.screen.width
-        ) ||
-        !Number.isFinite(
-            window.screen.height
-        )
-    ) {
         return NOT_AVAILABLE;
     }
 
-    return (
-        `${window.screen.width} × ` +
-        `${window.screen.height}`
-    );
-}
+    function getArchitecture() {
+        const userAgent = navigator.userAgent || "";
 
-function getAvailableScreen() {
-    if (
-        !window.screen ||
-        !Number.isFinite(
-            window.screen.availWidth
-        ) ||
-        !Number.isFinite(
-            window.screen.availHeight
-        )
-    ) {
+        if (/arm64|aarch64/i.test(userAgent)) {
+            return "ARM64";
+        }
+
+        if (/arm/i.test(userAgent)) {
+            return "ARM";
+        }
+
+        if (/win64|x64|x86_64|amd64/i.test(userAgent)) {
+            return "x86-64";
+        }
+
+        if (/i[3-6]86|x86/i.test(userAgent)) {
+            return "x86";
+        }
+
         return NOT_AVAILABLE;
     }
 
-    return (
-        `${window.screen.availWidth} × ` +
-        `${window.screen.availHeight}`
-    );
-}
+    function getLanguages() {
+        if (navigator.languages?.length) {
+            return navigator.languages.join(", ");
+        }
 
-function getWindowSize() {
-    if (
-        !Number.isFinite(
-            window.innerWidth
-        ) ||
-        !Number.isFinite(
-            window.innerHeight
-        )
-    ) {
-        return NOT_AVAILABLE;
+        return navigator.language || NOT_AVAILABLE;
     }
 
-    return (
-        `${window.innerWidth} × ` +
-        `${window.innerHeight}`
-    );
-}
+    /* ======================================================================
+       DISPLAY
+       ====================================================================== */
 
-function getPixelRatio() {
-    if (
-        !Number.isFinite(
-            window.devicePixelRatio
-        )
-    ) {
-        return NOT_AVAILABLE;
+    function getScreenResolution() {
+        if (!window.screen) {
+            return NOT_AVAILABLE;
+        }
+
+        return `${screen.width} × ${screen.height}`;
     }
 
-    return String(
-        window.devicePixelRatio
-    );
-}
+    function getAvailableScreen() {
+        if (!window.screen) {
+            return NOT_AVAILABLE;
+        }
 
-/* ==========================================================================
-   HARDWARE
-   ========================================================================== */
-
-function getCpuCoreCount() {
-    if (
-        !Number.isFinite(
-            navigator.hardwareConcurrency
-        )
-    ) {
-        return NOT_AVAILABLE;
+        return `${screen.availWidth} × ${screen.availHeight}`;
     }
 
-    return String(
-        navigator.hardwareConcurrency
-    );
-}
-
-function getDeviceMemory() {
-    if (
-        !Number.isFinite(
-            navigator.deviceMemory
-        )
-    ) {
-        return NOT_AVAILABLE;
+    function getWindowSize() {
+        return `${window.innerWidth} × ${window.innerHeight}`;
     }
 
-    return (
-        `Approximately ` +
-        `${navigator.deviceMemory} GB`
-    );
-}
+    function getPixelRatio() {
+        return Number.isFinite(window.devicePixelRatio)
+            ? String(window.devicePixelRatio)
+            : NOT_AVAILABLE;
+    }
 
-function getGpuRenderer() {
-    const canvas =
-        document.createElement("canvas");
+    /* ======================================================================
+       HARDWARE
+       ====================================================================== */
 
-    const context =
-        canvas.getContext("webgl") ||
-        canvas.getContext(
-            "experimental-webgl"
+    function getCpuCoreCount() {
+        return Number.isFinite(navigator.hardwareConcurrency)
+            ? String(navigator.hardwareConcurrency)
+            : NOT_AVAILABLE;
+    }
+
+    function getDeviceMemory() {
+        const memory = navigator["deviceMemory"];
+
+        return Number.isFinite(memory)
+            ? `Approximately ${memory} GB`
+            : NOT_AVAILABLE;
+    }
+
+    function getGpuRenderer() {
+        const canvas = document.createElement("canvas");
+
+        const gl =
+            canvas.getContext("webgl") ||
+            canvas.getContext("experimental-webgl");
+
+        if (!gl) {
+            return NOT_AVAILABLE;
+        }
+
+        const extension = gl.getExtension(
+            "WEBGL_debug_renderer_info"
         );
-
-    if (!context) {
-        return NOT_AVAILABLE;
-    }
-
-    try {
-        const extension =
-            context.getExtension(
-                "WEBGL_debug_renderer_info"
-            );
 
         if (extension) {
-            const renderer =
-                context.getParameter(
-                    extension
-                        .UNMASKED_RENDERER_WEBGL
-                );
-
-            if (renderer) {
-                return String(renderer);
-            }
+            return (
+                gl.getParameter(
+                    extension.UNMASKED_RENDERER_WEBGL
+                ) || NOT_AVAILABLE
+            );
         }
 
-        const fallbackRenderer =
-            context.getParameter(
-                context.RENDERER
-            );
-
-        return fallbackRenderer
-            ? String(fallbackRenderer)
-            : NOT_AVAILABLE;
-    } catch (error) {
-        console.warn(
-            "GPU renderer was unavailable:",
-            error
-        );
-
-        return NOT_AVAILABLE;
-    }
-}
-
-function getTouchSupport() {
-    const touchPoints =
-        Number.isFinite(
-            navigator.maxTouchPoints
-        )
-            ? navigator.maxTouchPoints
-            : 0;
-
-    if (touchPoints > 0) {
-        const suffix =
-            touchPoints === 1
-                ? ""
-                : "s";
-
-        return (
-            `Supported · ` +
-            `${touchPoints} ` +
-            `touch point${suffix}`
-        );
+        return gl.getParameter(gl.RENDERER) || NOT_AVAILABLE;
     }
 
-    if ("ontouchstart" in window) {
-        return "Supported";
+    function getTouchSupport() {
+        const points = navigator.maxTouchPoints || 0;
+
+        if (points > 0) {
+            return `${points} touch point${points === 1 ? "" : "s"}`;
+        }
+
+        return "Not detected";
     }
 
-    return "Not detected";
-}
+    /* ======================================================================
+       LOCALE
+       ====================================================================== */
 
-/* ==========================================================================
-   LOCALE
-   ========================================================================== */
+    function getTimezone() {
+        const timezone =
+            Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-function getTimezoneAndOffset() {
-    let timezone = NOT_AVAILABLE;
+        const offsetMinutes = -new Date().getTimezoneOffset();
+        const sign = offsetMinutes >= 0 ? "+" : "-";
+        const absoluteMinutes = Math.abs(offsetMinutes);
 
-    try {
-        timezone =
-            Intl.DateTimeFormat()
-                .resolvedOptions()
-                .timeZone ||
-            NOT_AVAILABLE;
-    } catch (error) {
-        console.warn(
-            "Timezone was unavailable:",
-            error
-        );
+        const hours = String(
+            Math.floor(absoluteMinutes / 60)
+        ).padStart(2, "0");
+
+        const minutes = String(
+            absoluteMinutes % 60
+        ).padStart(2, "0");
+
+        const offset = `UTC${sign}${hours}:${minutes}`;
+
+        return timezone
+            ? `${timezone} · ${offset}`
+            : offset;
     }
 
-    const offsetMinutes =
-        -new Date().getTimezoneOffset();
+    /* ======================================================================
+       PRIVACY AND STORAGE
+       ====================================================================== */
 
-    const offset =
-        formatUtcOffset(offsetMinutes);
+    function getPrivacySignals() {
+        const dntValue =
+            navigator.doNotTrack ??
+            window.doNotTrack;
 
-    return timezone === NOT_AVAILABLE
-        ? offset
-        : `${timezone} · ${offset}`;
-}
+        let dnt = NOT_AVAILABLE;
 
-function formatUtcOffset(offsetMinutes) {
-    const sign =
-        offsetMinutes >= 0 ? "+" : "-";
+        if (dntValue === "1" || dntValue === 1) {
+            dnt = "enabled";
+        } else if (dntValue === "0" || dntValue === 0) {
+            dnt = "not enabled";
+        }
 
-    const absoluteMinutes =
-        Math.abs(offsetMinutes);
+        const gpcValue = navigator["globalPrivacyControl"];
 
-    const hours = String(
-        Math.floor(
-            absoluteMinutes / 60
-        )
-    ).padStart(2, "0");
+        const gpc =
+            typeof gpcValue === "boolean"
+                ? gpcValue
+                    ? "enabled"
+                    : "not enabled"
+                : NOT_AVAILABLE;
 
-    const minutes = String(
-        absoluteMinutes % 60
-    ).padStart(2, "0");
-
-    return (
-        `UTC${sign}${hours}:${minutes}`
-    );
-}
-
-/* ==========================================================================
-   CANVAS HASH
-   ========================================================================== */
-
-async function createCanvasHash() {
-    const canvas =
-        document.createElement("canvas");
-
-    canvas.width = 320;
-    canvas.height = 100;
-
-    const context =
-        canvas.getContext("2d");
-
-    if (!context) {
-        return NOT_AVAILABLE;
+        return `DNT: ${dnt} · GPC: ${gpc}`;
     }
 
-    const gradient =
-        context.createLinearGradient(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-    gradient.addColorStop(
-        0,
-        "#4f81bd"
-    );
-
-    gradient.addColorStop(
-        0.5,
-        "#9bbb59"
-    );
-
-    gradient.addColorStop(
-        1,
-        "#c0504d"
-    );
-
-    context.fillStyle = gradient;
-
-    context.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    context.fillStyle =
-        "rgba(20, 20, 20, 0.85)";
-
-    context.fillRect(
-        8,
-        8,
-        304,
-        84
-    );
-
-    context.textBaseline =
-        "alphabetic";
-
-    context.font =
-        '17px "Segoe UI", Arial, sans-serif';
-
-    context.fillStyle = "#f2f2f2";
-
-    context.fillText(
-        "Fingerprint Mirror: Cwm fjord bank glyphs",
-        15,
-        40
-    );
-
-    context.fillStyle = "#9caebd";
-
-    context.fillText(
-        "0123456789 !@#$%^&*()",
-        15,
-        68
-    );
-
-    context.beginPath();
-
-    context.arc(
-        284,
-        51,
-        23,
-        0,
-        Math.PI * 2
-    );
-
-    context.strokeStyle =
-        "rgba(255, 255, 255, 0.75)";
-
-    context.lineWidth = 3;
-    context.stroke();
-
-    return createSha256Hash(
-        canvas.toDataURL("image/png")
-    );
-}
-
-/* ==========================================================================
-   AUDIO HASH
-   ========================================================================== */
-
-async function createAudioHash() {
-    const OfflineAudioContextClass =
-        window.OfflineAudioContext ||
-        window.webkitOfflineAudioContext;
-
-    if (!OfflineAudioContextClass) {
-        return NOT_AVAILABLE;
-    }
-
-    const sampleRate = 44100;
-    const frameCount = 44100;
-
-    const audioContext =
-        new OfflineAudioContextClass(
-            1,
-            frameCount,
-            sampleRate
-        );
-
-    const oscillator =
-        audioContext.createOscillator();
-
-    const compressor =
-        audioContext
-            .createDynamicsCompressor();
-
-    oscillator.type = "triangle";
-    oscillator.frequency.value = 10000;
-
-    compressor.threshold.value = -50;
-    compressor.knee.value = 40;
-    compressor.ratio.value = 12;
-    compressor.attack.value = 0;
-    compressor.release.value = 0.25;
-
-    oscillator.connect(compressor);
-
-    compressor.connect(
-        audioContext.destination
-    );
-
-    oscillator.start(0);
-
-    const renderedBuffer =
-        await audioContext.startRendering();
-
-    const sourceSamples =
-        renderedBuffer.getChannelData(0);
-
-    const copiedSamples =
-        new Float32Array(
-            sourceSamples.length
-        );
-
-    copiedSamples.set(sourceSamples);
-
-    return createSha256Hash(
-        copiedSamples.buffer
-    );
-}
-
-/* ==========================================================================
-   SHA-256
-   ========================================================================== */
-
-async function createSha256Hash(value) {
-    if (
-        !window.crypto ||
-        !window.crypto.subtle
-    ) {
-        return NOT_AVAILABLE;
-    }
-
-    let data;
-
-    if (typeof value === "string") {
-        data =
-            new TextEncoder().encode(
-                value
-            );
-    } else if (
-        value instanceof ArrayBuffer
-    ) {
-        data = value;
-    } else if (
-        ArrayBuffer.isView(value)
-    ) {
-        data = value.buffer;
-    } else {
-        data =
-            new TextEncoder().encode(
-                JSON.stringify(value)
-            );
-    }
-
-    const digest =
-        await window.crypto.subtle.digest(
-            "SHA-256",
-            data
-        );
-
-    return Array.from(
-        new Uint8Array(digest)
-    )
-        .map((byte) => {
-            return byte
-                .toString(16)
-                .padStart(2, "0");
-        })
-        .join("");
-}
-
-/* ==========================================================================
-   PRIVACY SETTINGS
-   ========================================================================== */
-
-function getPrivacySignals() {
-    const doNotTrackValue =
-        navigator.doNotTrack ??
-        window.doNotTrack ??
-        navigator.msDoNotTrack;
-
-    const doNotTrack =
-        formatDoNotTrack(
-            doNotTrackValue
-        );
-
-    let globalPrivacyControl =
-        NOT_AVAILABLE;
-
-    if (
-        typeof navigator
-            .globalPrivacyControl ===
-        "boolean"
-    ) {
-        globalPrivacyControl =
-            navigator
-                .globalPrivacyControl
-                ? "enabled"
-                : "not enabled";
-    }
-
-    return (
-        `DNT: ${doNotTrack} · ` +
-        `GPC: ${globalPrivacyControl}`
-    );
-}
-
-function formatDoNotTrack(value) {
-    if (
-        value === "1" ||
-        value === 1 ||
-        value === "yes"
-    ) {
-        return "enabled";
-    }
-
-    if (
-        value === "0" ||
-        value === 0 ||
-        value === "no"
-    ) {
-        return "not enabled";
-    }
-
-    return NOT_AVAILABLE;
-}
-
-function getCookiesAndStorage() {
-    const cookies =
-        navigator.cookieEnabled
+    function getStorageStatus() {
+        const cookies = navigator.cookieEnabled
             ? "enabled"
             : "disabled";
 
-    const localStorageStatus =
-        testStorageAvailability(
-            "localStorage"
-        )
+        const local = storageWorks("localStorage")
             ? "available"
             : NOT_AVAILABLE;
 
-    const sessionStorageStatus =
-        testStorageAvailability(
-            "sessionStorage"
-        )
+        const session = storageWorks("sessionStorage")
             ? "available"
             : NOT_AVAILABLE;
 
-    const indexedDbStatus =
-        "indexedDB" in window
-            ? "available"
-            : NOT_AVAILABLE;
+        return (
+            `Cookies: ${cookies} · ` +
+            `localStorage: ${local} · ` +
+            `sessionStorage: ${session}`
+        );
+    }
 
-    return (
-        `Cookies: ${cookies} · ` +
-        `localStorage: ${localStorageStatus} · ` +
-        `sessionStorage: ${sessionStorageStatus} · ` +
-        `IndexedDB: ${indexedDbStatus}`
-    );
-}
+    function storageWorks(storageName) {
+        try {
+            const storage = window[storageName];
+            const key = "__fingerprint_test__";
 
-function testStorageAvailability(
-    storageName
-) {
-    try {
-        const storage =
-            window[storageName];
+            storage.setItem(key, "1");
+            storage.removeItem(key);
 
-        if (!storage) {
+            return true;
+        } catch {
             return false;
         }
-
-        const key =
-            "__fingerprint_mirror_test__";
-
-        storage.setItem(key, "1");
-        storage.removeItem(key);
-
-        return true;
-    } catch (error) {
-        return false;
     }
-}
 
-/* ==========================================================================
-   PUBLIC IP LOOKUP
-   ========================================================================== */
+    /* ======================================================================
+       CANVAS HASH
+       ====================================================================== */
 
-async function lookUpPublicIp() {
-    const ipButton =
-        document.getElementById(
+    async function createCanvasHash() {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+            return NOT_AVAILABLE;
+        }
+
+        canvas.width = 300;
+        canvas.height = 60;
+
+        context.fillStyle = "#121212";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.font = "18px Arial";
+        context.fillStyle = "#ffffff";
+        context.fillText(
+            "Fingerprint Mirror 0123456789",
+            10,
+            34
+        );
+
+        return hashText(canvas.toDataURL());
+    }
+
+    /* ======================================================================
+       AUDIO HASH
+       ====================================================================== */
+
+    async function createAudioHash() {
+        const AudioContext =
+            window.OfflineAudioContext ||
+            window["webkitOfflineAudioContext"];
+
+        if (!AudioContext) {
+            return NOT_AVAILABLE;
+        }
+
+        const context = new AudioContext(1, 5000, 44100);
+        const oscillator = context.createOscillator();
+
+        oscillator.type = "triangle";
+        oscillator.frequency.value = 1000;
+        oscillator.connect(context.destination);
+        oscillator.start();
+
+        const buffer = await context.startRendering();
+        const samples = buffer.getChannelData(0);
+
+        let sampleText = "";
+
+        for (let index = 0; index < samples.length; index += 100) {
+            sampleText += samples[index].toFixed(8);
+        }
+
+        return hashText(sampleText);
+    }
+
+    /* ======================================================================
+       SHA-256
+       ====================================================================== */
+
+    async function hashText(text) {
+        if (!window.crypto?.subtle) {
+            return NOT_AVAILABLE;
+        }
+
+        const bytes = new TextEncoder().encode(text);
+
+        const digest = await crypto.subtle.digest(
+            "SHA-256",
+            bytes
+        );
+
+        return Array.from(new Uint8Array(digest))
+            .map((byte) => byte.toString(16).padStart(2, "0"))
+            .join("");
+    }
+
+    /* ======================================================================
+       PUBLIC IP LOOKUP
+       ====================================================================== */
+
+    async function lookupIp() {
+        const button = document.getElementById(
             "fingerprint-ip-lookup"
         );
 
-    if (ipButton) {
-        ipButton.disabled = true;
-        ipButton.textContent =
-            "Looking up...";
-    }
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Looking up...";
+        }
 
-    setFingerprintStatus(
-        "Requesting public IP and approximate location..."
-    );
+        setStatus(
+            "Requesting public IP and approximate location..."
+        );
 
-    setFingerprintValue(
-        "publicIp",
-        "looking up..."
-    );
+        try {
+            const response = await fetch(
+                "https://ipapi.co/json/"
+            );
 
-    setFingerprintValue(
-        "approximateLocation",
-        "looking up..."
-    );
-
-    setFingerprintValue(
-        "ispAndAsn",
-        "looking up..."
-    );
-
-    try {
-        const response = await fetch(
-            "https://ipapi.co/json/",
-            {
-                method: "GET",
-                headers: {
-                    Accept:
-                        "application/json"
-                },
-                cache: "no-store"
+            if (!response.ok) {
+                throw new Error(
+                    `IP lookup returned ${response.status}`
+                );
             }
-        );
 
-        if (!response.ok) {
-            throw new Error(
-                `IP lookup failed: ` +
-                `${response.status}`
+            const data = await response.json();
+
+            setValue(
+                "publicIp",
+                data.ip || NOT_AVAILABLE
             );
-        }
 
-        const data =
-            await response.json();
+            const location = [
+                data.city,
+                data.region,
+                data.country_name
+            ]
+                .filter(Boolean)
+                .join(", ");
 
-        if (data.error) {
-            throw new Error(
-                data.reason ||
-                "The IP service returned an error."
+            setValue(
+                "approximateLocation",
+                location || NOT_AVAILABLE
             );
-        }
 
-        setFingerprintValue(
-            "publicIp",
-            cleanExternalValue(data.ip)
-        );
+            const network = [
+                data.org,
+                data.asn
+            ]
+                .filter(Boolean)
+                .join(" · ");
 
-        setFingerprintValue(
-            "approximateLocation",
-            formatApproximateLocation(
-                data
-            )
-        );
-
-        setFingerprintValue(
-            "ispAndAsn",
-            formatIspAndAsn(data)
-        );
-
-        setFingerprintStatus(
-            "IP lookup complete. Location is approximate."
-        );
-    } catch (error) {
-        console.error(
-            "Public IP lookup failed:",
-            error
-        );
-
-        setFingerprintValue(
-            "publicIp",
-            "lookup unavailable"
-        );
-
-        setFingerprintValue(
-            "approximateLocation",
-            "lookup unavailable"
-        );
-
-        setFingerprintValue(
-            "ispAndAsn",
-            "lookup unavailable"
-        );
-
-        setFingerprintStatus(
-            "IP lookup was blocked or unavailable."
-        );
-    } finally {
-        if (ipButton) {
-            ipButton.disabled = false;
-            ipButton.textContent =
-                "Look up my IP";
-        }
-    }
-}
-
-function formatApproximateLocation(
-    data
-) {
-    const parts = [
-        cleanExternalValue(
-            data.city,
-            ""
-        ),
-        cleanExternalValue(
-            data.region,
-            ""
-        ),
-        cleanExternalValue(
-            data.country_name ||
-                data.country,
-            ""
-        )
-    ].filter(Boolean);
-
-    return parts.length
-        ? parts.join(", ")
-        : NOT_AVAILABLE;
-}
-
-function formatIspAndAsn(data) {
-    const isp = cleanExternalValue(
-        data.org ||
-            data.organization ||
-            data.isp,
-        ""
-    );
-
-    const asn = cleanExternalValue(
-        data.asn,
-        ""
-    );
-
-    if (isp && asn) {
-        return `${isp} · ${asn}`;
-    }
-
-    return (
-        isp ||
-        asn ||
-        NOT_AVAILABLE
-    );
-}
-
-function cleanExternalValue(
-    value,
-    fallback = NOT_AVAILABLE
-) {
-    if (
-        value === null ||
-        value === undefined ||
-        value === ""
-    ) {
-        return fallback;
-    }
-
-    return (
-        String(value).trim() ||
-        fallback
-    );
-}
-
-/* ==========================================================================
-   COPY AS JSON
-   ========================================================================== */
-
-async function copyFingerprintAsJson() {
-    const copyButton =
-        document.getElementById(
-            "fingerprint-copy"
-        );
-
-    const output = {};
-
-    fingerprintItems.forEach(
-        (item) => {
-            output[item.label] =
-                fingerprintState[
-                    item.key
-                ];
-        }
-    );
-
-    const json =
-        JSON.stringify(
-            output,
-            null,
-            2
-        );
-
-    try {
-        await copyTextToClipboard(
-            json
-        );
-
-        setFingerprintStatus(
-            "All 20 values were copied as JSON."
-        );
-
-        if (copyButton) {
-            copyButton.textContent =
-                "Copied";
-
-            window.setTimeout(() => {
-                copyButton.textContent =
-                    "Copy as JSON";
-            }, 1200);
-        }
-    } catch (error) {
-        console.error(
-            "Unable to copy fingerprint JSON:",
-            error
-        );
-
-        setFingerprintStatus(
-            "The JSON could not be copied automatically."
-        );
-    }
-}
-
-async function copyTextToClipboard(
-    text
-) {
-    if (
-        navigator.clipboard &&
-        window.isSecureContext
-    ) {
-        await navigator.clipboard.writeText(
-            text
-        );
-        return;
-    }
-
-    const textArea =
-        document.createElement(
-            "textarea"
-        );
-
-    textArea.value = text;
-
-    textArea.setAttribute(
-        "readonly",
-        ""
-    );
-
-    textArea.style.position =
-        "fixed";
-
-    textArea.style.left =
-        "-9999px";
-
-    textArea.style.opacity =
-        "0";
-
-    document.body.appendChild(
-        textArea
-    );
-
-    textArea.select();
-
-    textArea.setSelectionRange(
-        0,
-        textArea.value.length
-    );
-
-    const copied =
-        document.execCommand(
-            "copy"
-        );
-
-    textArea.remove();
-
-    if (!copied) {
-        throw new Error(
-            "The browser rejected the copy command."
-        );
-    }
-}
-
-/* ==========================================================================
-   DISPLAY HELPERS
-   ========================================================================== */
-
-function renderFingerprintState() {
-    fingerprintItems.forEach(
-        (item) => {
-            setFingerprintValue(
-                item.key,
-                fingerprintState[
-                    item.key
-                ]
+            setValue(
+                "ispAndAsn",
+                network || NOT_AVAILABLE
             );
+
+            setStatus(
+                "IP lookup complete. Location is approximate."
+            );
+        } catch (error) {
+            console.error("IP lookup failed:", error);
+
+            setValue("publicIp", "lookup unavailable");
+            setValue(
+                "approximateLocation",
+                "lookup unavailable"
+            );
+            setValue("ispAndAsn", "lookup unavailable");
+
+            setStatus(
+                "IP lookup was blocked or unavailable."
+            );
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = "Look up my IP";
+            }
         }
-    );
-}
+    }
 
-function setFingerprintValue(
-    key,
-    value
-) {
-    const safeValue =
-        value === null ||
-        value === undefined ||
-        value === ""
-            ? NOT_AVAILABLE
-            : String(value);
+    /* ======================================================================
+       COPY JSON
+       ====================================================================== */
 
-    fingerprintState[key] =
-        safeValue;
+    async function copyAsJson() {
+        const output = {};
 
-    const valueElement =
-        document.getElementById(
+        for (const key of Object.keys(state)) {
+            output[labels[key]] = state[key];
+        }
+
+        const json = JSON.stringify(output, null, 2);
+
+        try {
+            await navigator.clipboard.writeText(json);
+            setStatus("All 20 values copied as JSON.");
+        } catch {
+            setStatus("The browser could not copy the JSON.");
+        }
+    }
+
+    /* ======================================================================
+       UI HELPERS
+       ====================================================================== */
+
+    function setValue(key, value) {
+        const safeValue =
+            value === undefined ||
+            value === null ||
+            value === ""
+                ? NOT_AVAILABLE
+                : String(value);
+
+        state[key] = safeValue;
+
+        const element = document.getElementById(
             `fingerprint-${key}`
         );
 
-    if (valueElement) {
-        valueElement.textContent =
-            safeValue;
-
-        valueElement.title =
-            safeValue;
+        if (element) {
+            element.textContent = safeValue;
+            element.title = safeValue;
+        }
     }
-}
 
-function setFingerprintStatus(
-    message
-) {
-    const status =
-        document.getElementById(
+    function renderAll() {
+        for (const key of Object.keys(state)) {
+            setValue(key, state[key]);
+        }
+    }
+
+    function setStatus(message) {
+        const status = document.getElementById(
             "fingerprint-status"
         );
 
-    if (status) {
-        status.textContent =
-            message;
+        if (status) {
+            status.textContent = message;
+        }
     }
-}
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initialize
+        );
+    } else {
+        initialize();
+    }
+})();

@@ -143,10 +143,14 @@ const fingerprintItems = [
    INITIALIZATION
    ========================================================================== */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeFingerprintMirror
-);
+if (document.readyState === "loading") {
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeFingerprintMirror
+    );
+} else {
+    initializeFingerprintMirror();
+}
 
 function initializeFingerprintMirror() {
     const panel = document.getElementById(

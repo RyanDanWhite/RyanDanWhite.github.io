@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link rel="stylesheet" href="style/startpage.css">
     <title>Start Page</title>
 
-    style/startpage.css
 </head>
 
 <body>
@@ -275,15 +274,15 @@
 
             </section>
 
-
             <!-- Wikipedia Quick Search -->
-
             <section class="search-panel">
-
                 <h2>Wikipedia</h2>
 
-                https://en.wikipedia.org/w/index.php
-
+                <form
+                    action="https://en.wikipedia.org/w/index.php"
+                    method="get"
+                    target="_blank"
+                >
                     <input
                         type="search"
                         name="search"
@@ -295,11 +294,8 @@
                     <button type="submit">
                         Go
                     </button>
-
                 </form>
-
             </section>
-
 
             <!-- Clock -->
 
@@ -315,7 +311,7 @@
     </main>
 
 
-    js/startpage.jsscript>
+<script src="js/startpage.js"></script>
 
 </body>
 

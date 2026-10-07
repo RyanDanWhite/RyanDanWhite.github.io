@@ -143,37 +143,34 @@ const fingerprintItems = [
    INITIALIZATION
    ========================================================================== */
 
-document.addEventListener("DOMContentLoaded", initializeFingerprintMirror);
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeFingerprintMirror
+);
 
 function initializeFingerprintMirror() {
-    const panel = document.getElementById("fingerprint-panel");
+    const panel = document.getElementById(
+        "fingerprint-panel"
+    );
 
     if (!panel) {
         console.warn(
             "Fingerprint Mirror could not find #fingerprint-panel."
         );
-
         return;
     }
 
-    const toggleButton =
-        document.getElementById("fingerprint-toggle");
+    const rescanButton = document.getElementById(
+        "fingerprint-rescan"
+    );
 
-    const rescanButton =
-        document.getElementById("fingerprint-rescan");
+    const copyButton = document.getElementById(
+        "fingerprint-copy"
+    );
 
-    const copyButton =
-        document.getElementById("fingerprint-copy");
-
-    const ipButton =
-        document.getElementById("fingerprint-ip-lookup");
-
-    if (toggleButton) {
-        toggleButton.addEventListener(
-            "click",
-            toggleFingerprintMirror
-        );
-    }
+    const ipButton = document.getElementById(
+        "fingerprint-ip-lookup"
+    );
 
     if (rescanButton) {
         rescanButton.addEventListener(
@@ -201,47 +198,22 @@ function initializeFingerprintMirror() {
 }
 
 /* ==========================================================================
-   PANEL CONTROL
-   ========================================================================== */
-
-function toggleFingerprintMirror() {
-    const toggleButton =
-        document.getElementById("fingerprint-toggle");
-
-    const content =
-        document.getElementById("fingerprint-content");
-
-    if (!toggleButton || !content) {
-        return;
-    }
-
-    const shouldOpen = content.hidden;
-
-    content.hidden = !shouldOpen;
-    toggleButton.textContent = shouldOpen
-        ? "Collapse"
-        : "Expand";
-
-    toggleButton.setAttribute(
-        "aria-expanded",
-        String(shouldOpen)
-    );
-}
-
-/* ==========================================================================
    MAIN LOCAL SCAN
    ========================================================================== */
 
 async function scanFingerprint() {
-    const rescanButton =
-        document.getElementById("fingerprint-rescan");
+    const rescanButton = document.getElementById(
+        "fingerprint-rescan"
+    );
 
     if (rescanButton) {
         rescanButton.disabled = true;
         rescanButton.textContent = "Scanning...";
     }
 
-    setFingerprintStatus("Scanning browser and system...");
+    setFingerprintStatus(
+        "Scanning browser and system..."
+    );
 
     try {
         const browserData =
@@ -332,10 +304,11 @@ async function scanFingerprint() {
             "calculating..."
         );
 
-        const hashResults = await Promise.allSettled([
-            createCanvasHash(),
-            createAudioHash()
-        ]);
+        const hashResults =
+            await Promise.allSettled([
+                createCanvasHash(),
+                createAudioHash()
+            ]);
 
         const canvasResult = hashResults[0];
         const audioResult = hashResults[1];
@@ -356,7 +329,10 @@ async function scanFingerprint() {
 
         setFingerprintStatus("Scan complete.");
     } catch (error) {
-        console.error("Fingerprint scan failed:", error);
+        console.error(
+            "Fingerprint scan failed:",
+            error
+        );
 
         setFingerprintStatus(
             "The scan completed with unavailable values."
@@ -379,16 +355,22 @@ async function getBrowserAndSystemData() {
     );
 
     const result = {
-        browserAndVersion: fallback.browserAndVersion,
-        osAndVersion: fallback.osAndVersion,
-        cpuArchitecture: fallback.cpuArchitecture
+        browserAndVersion:
+            fallback.browserAndVersion,
+
+        osAndVersion:
+            fallback.osAndVersion,
+
+        cpuArchitecture:
+            fallback.cpuArchitecture
     };
 
     const userAgentData = navigator.userAgentData;
 
     if (
         !userAgentData ||
-        typeof userAgentData.getHighEntropyValues !== "function"
+        typeof userAgentData.getHighEntropyValues !==
+            "function"
     ) {
         return result;
     }
@@ -417,12 +399,14 @@ async function getBrowserAndSystemData() {
 
         const operatingSystem =
             formatClientHintOperatingSystem(
-                values.platform || userAgentData.platform,
+                values.platform ||
+                    userAgentData.platform,
                 values.platformVersion
             );
 
         if (operatingSystem !== NOT_AVAILABLE) {
-            result.osAndVersion = operatingSystem;
+            result.osAndVersion =
+                operatingSystem;
         }
 
         const architecture =
@@ -433,7 +417,8 @@ async function getBrowserAndSystemData() {
             );
 
         if (architecture !== NOT_AVAILABLE) {
-            result.cpuArchitecture = architecture;
+            result.cpuArchitecture =
+                architecture;
         }
     } catch (error) {
         console.warn(
@@ -454,41 +439,61 @@ function getBrowserFromClientHints(
         userAgentData.brands ||
         [];
 
-    const usableBrands = brands.filter((entry) => {
-        return (
-            entry &&
-            entry.brand &&
-            !/not.?a.?brand/i.test(entry.brand)
-        );
-    });
+    const usableBrands = brands.filter(
+        (entry) => {
+            return (
+                entry &&
+                entry.brand &&
+                !/not.?a.?brand/i.test(
+                    entry.brand
+                )
+            );
+        }
+    );
 
-    const edge = usableBrands.find((entry) => {
-        return /microsoft edge/i.test(entry.brand);
-    });
+    const edge = usableBrands.find(
+        (entry) => {
+            return /microsoft edge/i.test(
+                entry.brand
+            );
+        }
+    );
 
     if (edge) {
         return `Microsoft Edge ${edge.version}`;
     }
 
-    const opera = usableBrands.find((entry) => {
-        return /opera/i.test(entry.brand);
-    });
+    const opera = usableBrands.find(
+        (entry) => {
+            return /opera/i.test(
+                entry.brand
+            );
+        }
+    );
 
     if (opera) {
         return `Opera ${opera.version}`;
     }
 
-    const chrome = usableBrands.find((entry) => {
-        return /google chrome/i.test(entry.brand);
-    });
+    const chrome = usableBrands.find(
+        (entry) => {
+            return /google chrome/i.test(
+                entry.brand
+            );
+        }
+    );
 
     if (chrome) {
         return `Google Chrome ${chrome.version}`;
     }
 
-    const chromium = usableBrands.find((entry) => {
-        return /^chromium$/i.test(entry.brand);
-    });
+    const chromium = usableBrands.find(
+        (entry) => {
+            return /^chromium$/i.test(
+                entry.brand
+            );
+        }
+    );
 
     if (chromium) {
         return `Chromium ${chromium.version}`;
@@ -565,10 +570,14 @@ function parseUserAgent(userAgent) {
             getBrowserFromUserAgent(userAgent),
 
         osAndVersion:
-            getOperatingSystemFromUserAgent(userAgent),
+            getOperatingSystemFromUserAgent(
+                userAgent
+            ),
 
         cpuArchitecture:
-            getArchitectureFromUserAgent(userAgent)
+            getArchitectureFromUserAgent(
+                userAgent
+            )
     };
 }
 
@@ -592,7 +601,8 @@ function getBrowserFromUserAgent(userAgent) {
         },
         {
             name: "Safari",
-            expression: /Version\/([\d.]+).*Safari/
+            expression:
+                /Version\/([\d.]+).*Safari/
         }
     ];
 
@@ -602,16 +612,23 @@ function getBrowserFromUserAgent(userAgent) {
         );
 
         if (match) {
-            return `${browser.name} ${match[1]}`;
+            return (
+                `${browser.name} ` +
+                `${match[1]}`
+            );
         }
     }
 
     return NOT_AVAILABLE;
 }
 
-function getOperatingSystemFromUserAgent(userAgent) {
+function getOperatingSystemFromUserAgent(
+    userAgent
+) {
     const androidMatch =
-        userAgent.match(/Android ([\d.]+)/);
+        userAgent.match(
+            /Android ([\d.]+)/
+        );
 
     if (androidMatch) {
         return `Android ${androidMatch[1]}`;
@@ -622,11 +639,19 @@ function getOperatingSystemFromUserAgent(userAgent) {
     );
 
     if (iosMatch) {
-        return `iOS ${iosMatch[1].replaceAll("_", ".")}`;
+        return (
+            `iOS ` +
+            `${iosMatch[1].replaceAll(
+                "_",
+                "."
+            )}`
+        );
     }
 
     const windowsMatch =
-        userAgent.match(/Windows NT ([\d.]+)/);
+        userAgent.match(
+            /Windows NT ([\d.]+)/
+        );
 
     if (windowsMatch) {
         const windowsVersions = {
@@ -637,16 +662,28 @@ function getOperatingSystemFromUserAgent(userAgent) {
         };
 
         return (
-            windowsVersions[windowsMatch[1]] ||
-            `Windows NT ${windowsMatch[1]}`
+            windowsVersions[
+                windowsMatch[1]
+            ] ||
+            `Windows NT ${
+                windowsMatch[1]
+            }`
         );
     }
 
     const macMatch =
-        userAgent.match(/Mac OS X ([\d_]+)/);
+        userAgent.match(
+            /Mac OS X ([\d_]+)/
+        );
 
     if (macMatch) {
-        return `macOS ${macMatch[1].replaceAll("_", ".")}`;
+        return (
+            `macOS ` +
+            `${macMatch[1].replaceAll(
+                "_",
+                "."
+            )}`
+        );
     }
 
     if (/Linux/i.test(userAgent)) {
@@ -656,7 +693,9 @@ function getOperatingSystemFromUserAgent(userAgent) {
     return NOT_AVAILABLE;
 }
 
-function getArchitectureFromUserAgent(userAgent) {
+function getArchitectureFromUserAgent(
+    userAgent
+) {
     if (/arm64|aarch64/i.test(userAgent)) {
         return "ARM64";
     }
@@ -665,7 +704,11 @@ function getArchitectureFromUserAgent(userAgent) {
         return "ARM";
     }
 
-    if (/x86_64|win64|x64|amd64/i.test(userAgent)) {
+    if (
+        /x86_64|win64|x64|amd64/i.test(
+            userAgent
+        )
+    ) {
         return "x86-64";
     }
 
@@ -684,7 +727,10 @@ function getLanguages() {
         return navigator.languages.join(", ");
     }
 
-    return navigator.language || NOT_AVAILABLE;
+    return (
+        navigator.language ||
+        NOT_AVAILABLE
+    );
 }
 
 /* ==========================================================================
@@ -694,8 +740,12 @@ function getLanguages() {
 function getScreenResolution() {
     if (
         !window.screen ||
-        !Number.isFinite(window.screen.width) ||
-        !Number.isFinite(window.screen.height)
+        !Number.isFinite(
+            window.screen.width
+        ) ||
+        !Number.isFinite(
+            window.screen.height
+        )
     ) {
         return NOT_AVAILABLE;
     }
@@ -709,8 +759,12 @@ function getScreenResolution() {
 function getAvailableScreen() {
     if (
         !window.screen ||
-        !Number.isFinite(window.screen.availWidth) ||
-        !Number.isFinite(window.screen.availHeight)
+        !Number.isFinite(
+            window.screen.availWidth
+        ) ||
+        !Number.isFinite(
+            window.screen.availHeight
+        )
     ) {
         return NOT_AVAILABLE;
     }
@@ -723,21 +777,34 @@ function getAvailableScreen() {
 
 function getWindowSize() {
     if (
-        !Number.isFinite(window.innerWidth) ||
-        !Number.isFinite(window.innerHeight)
+        !Number.isFinite(
+            window.innerWidth
+        ) ||
+        !Number.isFinite(
+            window.innerHeight
+        )
     ) {
         return NOT_AVAILABLE;
     }
 
-    return `${window.innerWidth} × ${window.innerHeight}`;
+    return (
+        `${window.innerWidth} × ` +
+        `${window.innerHeight}`
+    );
 }
 
 function getPixelRatio() {
-    if (!Number.isFinite(window.devicePixelRatio)) {
+    if (
+        !Number.isFinite(
+            window.devicePixelRatio
+        )
+    ) {
         return NOT_AVAILABLE;
     }
 
-    return String(window.devicePixelRatio);
+    return String(
+        window.devicePixelRatio
+    );
 }
 
 /* ==========================================================================
@@ -753,37 +820,52 @@ function getCpuCoreCount() {
         return NOT_AVAILABLE;
     }
 
-    return String(navigator.hardwareConcurrency);
+    return String(
+        navigator.hardwareConcurrency
+    );
 }
 
 function getDeviceMemory() {
-    if (!Number.isFinite(navigator.deviceMemory)) {
+    if (
+        !Number.isFinite(
+            navigator.deviceMemory
+        )
+    ) {
         return NOT_AVAILABLE;
     }
 
-    return `Approximately ${navigator.deviceMemory} GB`;
+    return (
+        `Approximately ` +
+        `${navigator.deviceMemory} GB`
+    );
 }
 
 function getGpuRenderer() {
-    const canvas = document.createElement("canvas");
+    const canvas =
+        document.createElement("canvas");
 
     const context =
         canvas.getContext("webgl") ||
-        canvas.getContext("experimental-webgl");
+        canvas.getContext(
+            "experimental-webgl"
+        );
 
     if (!context) {
         return NOT_AVAILABLE;
     }
 
     try {
-        const extension = context.getExtension(
-            "WEBGL_debug_renderer_info"
-        );
+        const extension =
+            context.getExtension(
+                "WEBGL_debug_renderer_info"
+            );
 
         if (extension) {
-            const renderer = context.getParameter(
-                extension.UNMASKED_RENDERER_WEBGL
-            );
+            const renderer =
+                context.getParameter(
+                    extension
+                        .UNMASKED_RENDERER_WEBGL
+                );
 
             if (renderer) {
                 return String(renderer);
@@ -791,7 +873,9 @@ function getGpuRenderer() {
         }
 
         const fallbackRenderer =
-            context.getParameter(context.RENDERER);
+            context.getParameter(
+                context.RENDERER
+            );
 
         return fallbackRenderer
             ? String(fallbackRenderer)
@@ -807,18 +891,22 @@ function getGpuRenderer() {
 }
 
 function getTouchSupport() {
-    const touchPoints = Number.isFinite(
-        navigator.maxTouchPoints
-    )
-        ? navigator.maxTouchPoints
-        : 0;
+    const touchPoints =
+        Number.isFinite(
+            navigator.maxTouchPoints
+        )
+            ? navigator.maxTouchPoints
+            : 0;
 
     if (touchPoints > 0) {
         const suffix =
-            touchPoints === 1 ? "" : "s";
+            touchPoints === 1
+                ? ""
+                : "s";
 
         return (
-            `Supported · ${touchPoints} ` +
+            `Supported · ` +
+            `${touchPoints} ` +
             `touch point${suffix}`
         );
     }
@@ -853,7 +941,8 @@ function getTimezoneAndOffset() {
     const offsetMinutes =
         -new Date().getTimezoneOffset();
 
-    const offset = formatUtcOffset(offsetMinutes);
+    const offset =
+        formatUtcOffset(offsetMinutes);
 
     return timezone === NOT_AVAILABLE
         ? offset
@@ -861,18 +950,25 @@ function getTimezoneAndOffset() {
 }
 
 function formatUtcOffset(offsetMinutes) {
-    const sign = offsetMinutes >= 0 ? "+" : "-";
-    const absoluteMinutes = Math.abs(offsetMinutes);
+    const sign =
+        offsetMinutes >= 0 ? "+" : "-";
+
+    const absoluteMinutes =
+        Math.abs(offsetMinutes);
 
     const hours = String(
-        Math.floor(absoluteMinutes / 60)
+        Math.floor(
+            absoluteMinutes / 60
+        )
     ).padStart(2, "0");
 
     const minutes = String(
         absoluteMinutes % 60
     ).padStart(2, "0");
 
-    return `UTC${sign}${hours}:${minutes}`;
+    return (
+        `UTC${sign}${hours}:${minutes}`
+    );
 }
 
 /* ==========================================================================
@@ -880,28 +976,44 @@ function formatUtcOffset(offsetMinutes) {
    ========================================================================== */
 
 async function createCanvasHash() {
-    const canvas = document.createElement("canvas");
+    const canvas =
+        document.createElement("canvas");
+
     canvas.width = 320;
     canvas.height = 100;
 
-    const context = canvas.getContext("2d");
+    const context =
+        canvas.getContext("2d");
 
     if (!context) {
         return NOT_AVAILABLE;
     }
 
-    const gradient = context.createLinearGradient(
+    const gradient =
+        context.createLinearGradient(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+    gradient.addColorStop(
         0,
-        0,
-        canvas.width,
-        canvas.height
+        "#4f81bd"
     );
 
-    gradient.addColorStop(0, "#4f81bd");
-    gradient.addColorStop(0.5, "#9bbb59");
-    gradient.addColorStop(1, "#c0504d");
+    gradient.addColorStop(
+        0.5,
+        "#9bbb59"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#c0504d"
+    );
 
     context.fillStyle = gradient;
+
     context.fillRect(
         0,
         0,
@@ -909,14 +1021,24 @@ async function createCanvasHash() {
         canvas.height
     );
 
-    context.fillStyle = "rgba(20, 20, 20, 0.85)";
-    context.fillRect(8, 8, 304, 84);
+    context.fillStyle =
+        "rgba(20, 20, 20, 0.85)";
 
-    context.textBaseline = "alphabetic";
+    context.fillRect(
+        8,
+        8,
+        304,
+        84
+    );
+
+    context.textBaseline =
+        "alphabetic";
+
     context.font =
         '17px "Segoe UI", Arial, sans-serif';
 
     context.fillStyle = "#f2f2f2";
+
     context.fillText(
         "Fingerprint Mirror: Cwm fjord bank glyphs",
         15,
@@ -924,6 +1046,7 @@ async function createCanvasHash() {
     );
 
     context.fillStyle = "#9caebd";
+
     context.fillText(
         "0123456789 !@#$%^&*()",
         15,
@@ -931,9 +1054,18 @@ async function createCanvasHash() {
     );
 
     context.beginPath();
-    context.arc(284, 51, 23, 0, Math.PI * 2);
+
+    context.arc(
+        284,
+        51,
+        23,
+        0,
+        Math.PI * 2
+    );
+
     context.strokeStyle =
         "rgba(255, 255, 255, 0.75)";
+
     context.lineWidth = 3;
     context.stroke();
 
@@ -969,7 +1101,8 @@ async function createAudioHash() {
         audioContext.createOscillator();
 
     const compressor =
-        audioContext.createDynamicsCompressor();
+        audioContext
+            .createDynamicsCompressor();
 
     oscillator.type = "triangle";
     oscillator.frequency.value = 10000;
@@ -981,7 +1114,10 @@ async function createAudioHash() {
     compressor.release.value = 0.25;
 
     oscillator.connect(compressor);
-    compressor.connect(audioContext.destination);
+
+    compressor.connect(
+        audioContext.destination
+    );
 
     oscillator.start(0);
 
@@ -992,11 +1128,15 @@ async function createAudioHash() {
         renderedBuffer.getChannelData(0);
 
     const copiedSamples =
-        new Float32Array(sourceSamples.length);
+        new Float32Array(
+            sourceSamples.length
+        );
 
     copiedSamples.set(sourceSamples);
 
-    return createSha256Hash(copiedSamples.buffer);
+    return createSha256Hash(
+        copiedSamples.buffer
+    );
 }
 
 /* ==========================================================================
@@ -1014,23 +1154,34 @@ async function createSha256Hash(value) {
     let data;
 
     if (typeof value === "string") {
-        data = new TextEncoder().encode(value);
-    } else if (value instanceof ArrayBuffer) {
+        data =
+            new TextEncoder().encode(
+                value
+            );
+    } else if (
+        value instanceof ArrayBuffer
+    ) {
         data = value;
-    } else if (ArrayBuffer.isView(value)) {
+    } else if (
+        ArrayBuffer.isView(value)
+    ) {
         data = value.buffer;
     } else {
-        data = new TextEncoder().encode(
-            JSON.stringify(value)
-        );
+        data =
+            new TextEncoder().encode(
+                JSON.stringify(value)
+            );
     }
 
-    const digest = await window.crypto.subtle.digest(
-        "SHA-256",
-        data
-    );
+    const digest =
+        await window.crypto.subtle.digest(
+            "SHA-256",
+            data
+        );
 
-    return Array.from(new Uint8Array(digest))
+    return Array.from(
+        new Uint8Array(digest)
+    )
         .map((byte) => {
             return byte
                 .toString(16)
@@ -1050,16 +1201,21 @@ function getPrivacySignals() {
         navigator.msDoNotTrack;
 
     const doNotTrack =
-        formatDoNotTrack(doNotTrackValue);
+        formatDoNotTrack(
+            doNotTrackValue
+        );
 
-    let globalPrivacyControl = NOT_AVAILABLE;
+    let globalPrivacyControl =
+        NOT_AVAILABLE;
 
     if (
-        typeof navigator.globalPrivacyControl ===
+        typeof navigator
+            .globalPrivacyControl ===
         "boolean"
     ) {
         globalPrivacyControl =
-            navigator.globalPrivacyControl
+            navigator
+                .globalPrivacyControl
                 ? "enabled"
                 : "not enabled";
     }
@@ -1091,17 +1247,22 @@ function formatDoNotTrack(value) {
 }
 
 function getCookiesAndStorage() {
-    const cookies = navigator.cookieEnabled
-        ? "enabled"
-        : "disabled";
+    const cookies =
+        navigator.cookieEnabled
+            ? "enabled"
+            : "disabled";
 
     const localStorageStatus =
-        testStorageAvailability("localStorage")
+        testStorageAvailability(
+            "localStorage"
+        )
             ? "available"
             : NOT_AVAILABLE;
 
     const sessionStorageStatus =
-        testStorageAvailability("sessionStorage")
+        testStorageAvailability(
+            "sessionStorage"
+        )
             ? "available"
             : NOT_AVAILABLE;
 
@@ -1118,9 +1279,12 @@ function getCookiesAndStorage() {
     );
 }
 
-function testStorageAvailability(storageName) {
+function testStorageAvailability(
+    storageName
+) {
     try {
-        const storage = window[storageName];
+        const storage =
+            window[storageName];
 
         if (!storage) {
             return false;
@@ -1150,19 +1314,28 @@ async function lookUpPublicIp() {
 
     if (ipButton) {
         ipButton.disabled = true;
-        ipButton.textContent = "Looking up...";
+        ipButton.textContent =
+            "Looking up...";
     }
 
     setFingerprintStatus(
         "Requesting public IP and approximate location..."
     );
 
-    setFingerprintValue("publicIp", "looking up...");
+    setFingerprintValue(
+        "publicIp",
+        "looking up..."
+    );
+
     setFingerprintValue(
         "approximateLocation",
         "looking up..."
     );
-    setFingerprintValue("ispAndAsn", "looking up...");
+
+    setFingerprintValue(
+        "ispAndAsn",
+        "looking up..."
+    );
 
     try {
         const response = await fetch(
@@ -1170,7 +1343,8 @@ async function lookUpPublicIp() {
             {
                 method: "GET",
                 headers: {
-                    Accept: "application/json"
+                    Accept:
+                        "application/json"
                 },
                 cache: "no-store"
             }
@@ -1178,11 +1352,13 @@ async function lookUpPublicIp() {
 
         if (!response.ok) {
             throw new Error(
-                `IP lookup failed: ${response.status}`
+                `IP lookup failed: ` +
+                `${response.status}`
             );
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         if (data.error) {
             throw new Error(
@@ -1198,7 +1374,9 @@ async function lookUpPublicIp() {
 
         setFingerprintValue(
             "approximateLocation",
-            formatApproximateLocation(data)
+            formatApproximateLocation(
+                data
+            )
         );
 
         setFingerprintValue(
@@ -1236,17 +1414,27 @@ async function lookUpPublicIp() {
     } finally {
         if (ipButton) {
             ipButton.disabled = false;
-            ipButton.textContent = "Look up my IP";
+            ipButton.textContent =
+                "Look up my IP";
         }
     }
 }
 
-function formatApproximateLocation(data) {
+function formatApproximateLocation(
+    data
+) {
     const parts = [
-        cleanExternalValue(data.city, ""),
-        cleanExternalValue(data.region, ""),
         cleanExternalValue(
-            data.country_name || data.country,
+            data.city,
+            ""
+        ),
+        cleanExternalValue(
+            data.region,
+            ""
+        ),
+        cleanExternalValue(
+            data.country_name ||
+                data.country,
             ""
         )
     ].filter(Boolean);
@@ -1259,8 +1447,8 @@ function formatApproximateLocation(data) {
 function formatIspAndAsn(data) {
     const isp = cleanExternalValue(
         data.org ||
-        data.organization ||
-        data.isp,
+            data.organization ||
+            data.isp,
         ""
     );
 
@@ -1273,7 +1461,11 @@ function formatIspAndAsn(data) {
         return `${isp} · ${asn}`;
     }
 
-    return isp || asn || NOT_AVAILABLE;
+    return (
+        isp ||
+        asn ||
+        NOT_AVAILABLE
+    );
 }
 
 function cleanExternalValue(
@@ -1288,7 +1480,10 @@ function cleanExternalValue(
         return fallback;
     }
 
-    return String(value).trim() || fallback;
+    return (
+        String(value).trim() ||
+        fallback
+    );
 }
 
 /* ==========================================================================
@@ -1297,26 +1492,40 @@ function cleanExternalValue(
 
 async function copyFingerprintAsJson() {
     const copyButton =
-        document.getElementById("fingerprint-copy");
+        document.getElementById(
+            "fingerprint-copy"
+        );
 
     const output = {};
 
-    fingerprintItems.forEach((item) => {
-        output[item.label] =
-            fingerprintState[item.key];
-    });
+    fingerprintItems.forEach(
+        (item) => {
+            output[item.label] =
+                fingerprintState[
+                    item.key
+                ];
+        }
+    );
 
-    const json = JSON.stringify(output, null, 2);
+    const json =
+        JSON.stringify(
+            output,
+            null,
+            2
+        );
 
     try {
-        await copyTextToClipboard(json);
+        await copyTextToClipboard(
+            json
+        );
 
         setFingerprintStatus(
             "All 20 values were copied as JSON."
         );
 
         if (copyButton) {
-            copyButton.textContent = "Copied";
+            copyButton.textContent =
+                "Copied";
 
             window.setTimeout(() => {
                 copyButton.textContent =
@@ -1335,34 +1544,55 @@ async function copyFingerprintAsJson() {
     }
 }
 
-async function copyTextToClipboard(text) {
+async function copyTextToClipboard(
+    text
+) {
     if (
         navigator.clipboard &&
         window.isSecureContext
     ) {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(
+            text
+        );
         return;
     }
 
     const textArea =
-        document.createElement("textarea");
+        document.createElement(
+            "textarea"
+        );
 
     textArea.value = text;
-    textArea.setAttribute("readonly", "");
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    textArea.style.opacity = "0";
 
-    document.body.appendChild(textArea);
+    textArea.setAttribute(
+        "readonly",
+        ""
+    );
+
+    textArea.style.position =
+        "fixed";
+
+    textArea.style.left =
+        "-9999px";
+
+    textArea.style.opacity =
+        "0";
+
+    document.body.appendChild(
+        textArea
+    );
 
     textArea.select();
+
     textArea.setSelectionRange(
         0,
         textArea.value.length
     );
 
     const copied =
-        document.execCommand("copy");
+        document.execCommand(
+            "copy"
+        );
 
     textArea.remove();
 
@@ -1378,15 +1608,22 @@ async function copyTextToClipboard(text) {
    ========================================================================== */
 
 function renderFingerprintState() {
-    fingerprintItems.forEach((item) => {
-        setFingerprintValue(
-            item.key,
-            fingerprintState[item.key]
-        );
-    });
+    fingerprintItems.forEach(
+        (item) => {
+            setFingerprintValue(
+                item.key,
+                fingerprintState[
+                    item.key
+                ]
+            );
+        }
+    );
 }
 
-function setFingerprintValue(key, value) {
+function setFingerprintValue(
+    key,
+    value
+) {
     const safeValue =
         value === null ||
         value === undefined ||
@@ -1394,7 +1631,8 @@ function setFingerprintValue(key, value) {
             ? NOT_AVAILABLE
             : String(value);
 
-    fingerprintState[key] = safeValue;
+    fingerprintState[key] =
+        safeValue;
 
     const valueElement =
         document.getElementById(
@@ -1402,18 +1640,24 @@ function setFingerprintValue(key, value) {
         );
 
     if (valueElement) {
-        valueElement.textContent = safeValue;
-        valueElement.title = safeValue;
+        valueElement.textContent =
+            safeValue;
+
+        valueElement.title =
+            safeValue;
     }
 }
 
-function setFingerprintStatus(message) {
+function setFingerprintStatus(
+    message
+) {
     const status =
         document.getElementById(
             "fingerprint-status"
         );
 
     if (status) {
-        status.textContent = message;
+        status.textContent =
+            message;
     }
 }

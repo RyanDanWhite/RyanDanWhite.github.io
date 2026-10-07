@@ -396,3 +396,231 @@ body {
 
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
 }
+/* ==========================================================================
+   WEATHER
+   ========================================================================== */
+
+#weather-panel {
+    width: 100%;
+    margin: 34px 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+}
+
+/* Header --------------------------------------------------------------- */
+
+.weather-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.weather-header h2 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+#weather-location {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* Current conditions --------------------------------------------------- */
+
+.weather-current {
+    margin-bottom: 16px;
+}
+
+.weather-current-main {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+#weather-current-temp {
+    color: var(--color-text-bright);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+#weather-current-condition {
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.weather-current-details {
+    margin-top: 8px;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+/* Weather alerts ------------------------------------------------------- */
+
+#weather-alerts {
+    display: none;
+    margin: 14px 0;
+}
+
+#weather-alerts.active {
+    display: block;
+}
+
+.weather-alert {
+    margin-top: 7px;
+    padding: 9px 11px;
+    border-left: 3px solid #c49a5a;
+    background: rgba(196, 154, 90, 0.09);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.weather-alert:first-child {
+    margin-top: 0;
+}
+
+.weather-alert-title {
+    color: var(--color-text-bright);
+    font-weight: 600;
+}
+
+.weather-alert-time {
+    display: block;
+    margin-top: 2px;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+}
+
+/* More urgent warnings can receive this class from JavaScript */
+
+.weather-alert.warning {
+    border-left-color: #c76a6a;
+    background: rgba(199, 106, 106, 0.10);
+}
+
+/* Calculated garden / frost risk -------------------------------------- */
+
+#weather-frost-risk {
+    display: none;
+    margin: 12px 0;
+    padding: 8px 11px;
+    border-left: 3px solid #7f9fb2;
+    background: rgba(127, 159, 178, 0.08);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+#weather-frost-risk.active {
+    display: block;
+}
+
+/* Five-day forecast ---------------------------------------------------- */
+
+.weather-forecast {
+    margin-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.weather-day {
+    display: grid;
+    grid-template-columns: 52px 72px minmax(0, 1fr) 45px 48px;
+    gap: 7px;
+    align-items: center;
+    min-height: 34px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.78rem;
+}
+
+.weather-day-name {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.weather-day-temp {
+    color: var(--color-text-bright);
+    white-space: nowrap;
+}
+
+.weather-day-condition {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.weather-day-rain,
+.weather-day-precip {
+    color: var(--color-text-muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Footer / actions ----------------------------------------------------- */
+
+.weather-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.weather-actions a,
+.weather-actions button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-accent);
+    font-family: inherit;
+    font-size: 0.78rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.weather-actions a:hover,
+.weather-actions a:focus,
+.weather-actions button:hover,
+.weather-actions button:focus {
+    color: var(--color-text-bright);
+    outline: none;
+    text-decoration: underline;
+}
+
+/* Status messages ------------------------------------------------------ */
+
+#weather-status {
+    margin-top: 10px;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+}
+
+#weather-status:empty {
+    display: none;
+}
+
+/* Narrow screens ------------------------------------------------------- */
+
+@media (max-width: 700px) {
+    .weather-day {
+        grid-template-columns: 48px 68px minmax(0, 1fr) 42px;
+    }
+
+    .weather-day-precip {
+        display: none;
+    }
+
+    .weather-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+}

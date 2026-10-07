@@ -297,6 +297,77 @@
                 </form>
             </section>
 
+<!-- Weather -->
+<section
+    id="weather-panel"
+    aria-label="Weather"
+>
+    <div class="weather-header">
+        <h2>Weather</h2>
+        <span id="weather-location">Toledo, OH</span>
+    </div>
+
+    <!-- Current Conditions -->
+    <div class="weather-current">
+        <div class="weather-current-main">
+            <span id="weather-current-temp">--°</span>
+            <span id="weather-current-condition">
+                Loading...
+            </span>
+        </div>
+
+        <div
+            id="weather-current-details"
+            class="weather-current-details"
+        ></div>
+    </div>
+
+    <!-- Official Weather Alerts -->
+    <div
+        id="weather-alerts"
+        aria-live="polite"
+    ></div>
+
+    <!-- Calculated Garden Frost Risk -->
+    <div
+        id="weather-frost-risk"
+        aria-live="polite"
+    ></div>
+
+    <!-- Five-Day Forecast -->
+    <div
+        id="weather-forecast"
+        class="weather-forecast"
+        aria-label="Five-day forecast"
+    ></div>
+
+    <!-- Weather Actions -->
+    <div class="weather-actions">
+        <a
+            id="weather-map-link"
+            href="https://www.windy.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Live Weather Map ↗
+        </a>
+
+        <button
+            id="weather-use-location"
+            type="button"
+        >
+            Use my location
+        </button>
+    </div>
+
+    <!-- Loading / Error Status -->
+    <div
+        id="weather-status"
+        role="status"
+        aria-live="polite"
+    ></div>
+</section>
+
             <!-- Clock -->
 
             <div
@@ -312,6 +383,7 @@
 
 <script src="js/startpage.js"></script>
 <script src="js/breakout.js"></script>
+<script src="js/weather.js"></script>
 
 </body>
 

@@ -1,282 +1,722 @@
 "use strict";
 
 (() => {
-    const NOT_AVAILABLE = "not available";
-    const NOT_LOOKED_UP = "not looked up";
+    const STATUS = Object.freeze({
+        PENDING: "Looking up...",
+        NOT_EXPOSED: "Not exposed by browser",
+        NOT_SUPPORTED: "Not supported by browser",
+        LOOKUP_UNAVAILABLE: "Lookup unavailable",
+        UNKNOWN: "Unknown"
+    });
 
     const state = {
-        browserAndVersion: NOT_AVAILABLE,
-        osAndVersion: NOT_AVAILABLE,
-        cpuArchitecture: NOT_AVAILABLE,
-        languages: NOT_AVAILABLE,
-        screenResolution: NOT_AVAILABLE,
-        availableScreen: NOT_AVAILABLE,
-        windowSize: NOT_AVAILABLE,
-        pixelRatio: NOT_AVAILABLE,
-        cpuCoreCount: NOT_AVAILABLE,
-        deviceMemory: NOT_AVAILABLE,
-        gpuRenderer: NOT_AVAILABLE,
-        touchSupport: NOT_AVAILABLE,
-        timezoneAndOffset: NOT_AVAILABLE,
-        canvasHash: NOT_AVAILABLE,
-        audioHash: NOT_AVAILABLE,
-        privacySignals: NOT_AVAILABLE,
-        cookiesAndStorage: NOT_AVAILABLE,
-        publicIp: NOT_LOOKED_UP,
-        approximateLocation: NOT_LOOKED_UP,
-        ispAndAsn: NOT_LOOKED_UP
+        deviceType: STATUS.UNKNOWN,
+
+        browser: STATUS.UNKNOWN,
+        browserVersion: STATUS.UNKNOWN,
+        userAgent: STATUS.UNKNOWN,
+
+        operatingSystem: STATUS.UNKNOWN,
+        osVersion: STATUS.NOT_EXPOSED,
+        platform: STATUS.UNKNOWN,
+
+        cpuArchitecture: STATUS.NOT_EXPOSED,
+        cpuBitness: STATUS.NOT_EXPOSED,
+        logicalProcessors: STATUS.NOT_EXPOSED,
+        approximateMemory: STATUS.NOT_EXPOSED,
+        graphics: STATUS.NOT_EXPOSED,
+
+        screenResolution: STATUS.UNKNOWN,
+        availableScreenArea: STATUS.UNKNOWN,
+
+        primaryLanguage: STATUS.UNKNOWN,
+        preferredLanguages: STATUS.UNKNOWN,
+        locale: STATUS.UNKNOWN,
+
+        timeZone: STATUS.UNKNOWN,
+        utcOffset: STATUS.UNKNOWN,
+
+        doNotTrack: STATUS.NOT_EXPOSED,
+        globalPrivacyControl: STATUS.NOT_EXPOSED,
+
+        onlineStatus: STATUS.UNKNOWN,
+        effectiveConnectionType: STATUS.NOT_EXPOSED,
+        estimatedDownlink: STATUS.NOT_EXPOSED,
+        estimatedRoundTripTime: STATUS.NOT_EXPOSED,
+        dataSaver: STATUS.NOT_EXPOSED,
+
+        publicIp: STATUS.PENDING,
+        approximateCity: STATUS.PENDING,
+        region: STATUS.PENDING,
+        country: STATUS.PENDING,
+        isp: STATUS.PENDING,
+        asn: STATUS.PENDING,
+
+        scanStatus: "Not started",
+        lastUpdated: null
     };
 
-    const labels = {
-        browserAndVersion: "Browser and version",
-        osAndVersion: "OS and version",
-        cpuArchitecture: "CPU architecture",
-        languages: "Languages",
-        screenResolution: "Screen resolution",
-        availableScreen: "Available screen",
-        windowSize: "Window size",
-        pixelRatio: "Pixel ratio",
-        cpuCoreCount: "CPU core count",
-        deviceMemory: "Device memory",
-        gpuRenderer: "GPU renderer",
-        touchSupport: "Touch support",
-        timezoneAndOffset: "Timezone and UTC offset",
-        canvasHash: "Canvas hash",
-        audioHash: "Audio hash",
-        privacySignals: "Do Not Track and Global Privacy Control",
-        cookiesAndStorage: "Cookies and storage availability",
-        publicIp: "Public IP",
-        approximateLocation: "Approximate location",
-        ispAndAsn: "ISP and ASN"
-    };
+    const subscribers = new Set();
 
-    function initialize() {
-        const panel = document.getElementById("fingerprint-panel");
+    /* ======================================================================
+       PUBLIC API
+       ====================================================================== */
 
-        if (!panel) {
-            console.warn("Fingerprint Mirror panel was not found.");
-            return;
+    window.FingerprintMirror = {
+        data: state,
+        status: STATUS,
+
+        getData() {
+            return { ...state };
+        },
+
+        scan,
+
+        subscribe(callback) {
+            if (typeof callback !== "function") {
+                throw new TypeError(
+                    "FingerprintMirror.subscribe requires a function."
+                );
+            }
+
+            subscribers.add(callback);
+
+            callback({ ...state });
+
+            return () => {
+                subscribers.delete(callback);
+            };
         }
+    };
 
-        document
-            .getElementById("fingerprint-rescan")
-            ?.addEventListener("click", scan);
-
-        document
-            .getElementById("fingerprint-copy")
-            ?.addEventListener("click", copyAsJson);
-
-        document
-            .getElementById("fingerprint-ip-lookup")
-            ?.addEventListener("click", lookupIp);
-
-        renderAll();
-        scan();
-    }
+    /* ======================================================================
+       MAIN SCAN
+       ====================================================================== */
 
     async function scan() {
-        const button = document.getElementById("fingerprint-rescan");
+        setValue("scanStatus", "Scanning browser and device...");
 
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Scanning...";
-        }
+        const browserInformation = safeGet(
+            getBrowserInformation,
+            {
+                browser: STATUS.UNKNOWN,
+                browserVersion: STATUS.UNKNOWN
+            }
+        );
 
-        setStatus("Scanning...");
+        setValue("browser", browserInformation.browser);
+        setValue(
+            "browserVersion",
+            browserInformation.browserVersion
+        );
 
-        setValue("browserAndVersion", getBrowser());
-        setValue("osAndVersion", getOperatingSystem());
-        setValue("cpuArchitecture", getArchitecture());
-        setValue("languages", getLanguages());
+        setValue(
+            "userAgent",
+            navigator.userAgent || STATUS.NOT_EXPOSED
+        );
 
-        setValue("screenResolution", getScreenResolution());
-        setValue("availableScreen", getAvailableScreen());
-        setValue("windowSize", getWindowSize());
-        setValue("pixelRatio", getPixelRatio());
+        const operatingSystem = safeGet(
+            getOperatingSystemInformation,
+            {
+                operatingSystem: STATUS.UNKNOWN,
+                osVersion: STATUS.NOT_EXPOSED,
+                platform: STATUS.UNKNOWN
+            }
+        );
 
-        setValue("cpuCoreCount", getCpuCoreCount());
-        setValue("deviceMemory", getDeviceMemory());
-        setValue("gpuRenderer", getGpuRenderer());
-        setValue("touchSupport", getTouchSupport());
+        setValue(
+            "operatingSystem",
+            operatingSystem.operatingSystem
+        );
 
-        setValue("timezoneAndOffset", getTimezone());
-        setValue("privacySignals", getPrivacySignals());
-        setValue("cookiesAndStorage", getStorageStatus());
+        setValue(
+            "osVersion",
+            operatingSystem.osVersion
+        );
 
-        setValue("canvasHash", "calculating...");
-        setValue("audioHash", "calculating...");
+        setValue(
+            "platform",
+            operatingSystem.platform
+        );
 
-        const canvasHash = await safelyRun(createCanvasHash);
-        const audioHash = await safelyRun(createAudioHash);
+        setValue(
+            "deviceType",
+            safeGet(getDeviceType)
+        );
 
-        setValue("canvasHash", canvasHash);
-        setValue("audioHash", audioHash);
+        setValue(
+            "logicalProcessors",
+            safeGet(getLogicalProcessors)
+        );
 
-        setStatus("Scan complete.");
+        setValue(
+            "approximateMemory",
+            safeGet(getApproximateMemory)
+        );
 
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Rescan";
-        }
-    }
+        setValue(
+            "graphics",
+            safeGet(getGraphicsInformation)
+        );
 
-    async function safelyRun(operation) {
-        try {
-            const result = await operation();
-            return result || NOT_AVAILABLE;
-        } catch (error) {
-            console.warn("Fingerprint check unavailable:", error);
-            return NOT_AVAILABLE;
-        }
+        const display = safeGet(
+            getDisplayInformation,
+            {
+                screenResolution: STATUS.UNKNOWN,
+                availableScreenArea: STATUS.UNKNOWN
+            }
+        );
+
+        setValue(
+            "screenResolution",
+            display.screenResolution
+        );
+
+        setValue(
+            "availableScreenArea",
+            display.availableScreenArea
+        );
+
+        const locale = safeGet(
+            getLocaleInformation,
+            {
+                primaryLanguage: STATUS.UNKNOWN,
+                preferredLanguages: STATUS.UNKNOWN,
+                locale: STATUS.UNKNOWN
+            }
+        );
+
+        setValue(
+            "primaryLanguage",
+            locale.primaryLanguage
+        );
+
+        setValue(
+            "preferredLanguages",
+            locale.preferredLanguages
+        );
+
+        setValue(
+            "locale",
+            locale.locale
+        );
+
+        const time = safeGet(
+            getTimeInformation,
+            {
+                timeZone: STATUS.UNKNOWN,
+                utcOffset: STATUS.UNKNOWN
+            }
+        );
+
+        setValue("timeZone", time.timeZone);
+        setValue("utcOffset", time.utcOffset);
+
+        const privacy = safeGet(
+            getPrivacyInformation,
+            {
+                doNotTrack: STATUS.NOT_EXPOSED,
+                globalPrivacyControl: STATUS.NOT_EXPOSED
+            }
+        );
+
+        setValue(
+            "doNotTrack",
+            privacy.doNotTrack
+        );
+
+        setValue(
+            "globalPrivacyControl",
+            privacy.globalPrivacyControl
+        );
+
+        const connection = safeGet(
+            getConnectionInformation,
+            {
+                onlineStatus: STATUS.UNKNOWN,
+                effectiveConnectionType:
+                    STATUS.NOT_EXPOSED,
+                estimatedDownlink:
+                    STATUS.NOT_EXPOSED,
+                estimatedRoundTripTime:
+                    STATUS.NOT_EXPOSED,
+                dataSaver:
+                    STATUS.NOT_EXPOSED
+            }
+        );
+
+        setValue(
+            "onlineStatus",
+            connection.onlineStatus
+        );
+
+        setValue(
+            "effectiveConnectionType",
+            connection.effectiveConnectionType
+        );
+
+        setValue(
+            "estimatedDownlink",
+            connection.estimatedDownlink
+        );
+
+        setValue(
+            "estimatedRoundTripTime",
+            connection.estimatedRoundTripTime
+        );
+
+        setValue(
+            "dataSaver",
+            connection.dataSaver
+        );
+
+        setValue(
+            "scanStatus",
+            "Requesting higher-detail system information..."
+        );
+
+        await collectHighEntropyInformation();
+
+        setValue(
+            "scanStatus",
+            "Looking up public network information..."
+        );
+
+        await lookupPublicNetworkInformation();
+
+        setValue(
+            "lastUpdated",
+            new Date().toISOString()
+        );
+
+        setValue(
+            "scanStatus",
+            "Scan complete"
+        );
+
+        return { ...state };
     }
 
     /* ======================================================================
-       BROWSER AND SYSTEM
+       BROWSER
        ====================================================================== */
 
-    function getBrowser() {
+    function getBrowserInformation() {
         const userAgent = navigator.userAgent || "";
 
         const patterns = [
-            ["Microsoft Edge", /Edg\/([\d.]+)/],
-            ["Opera", /OPR\/([\d.]+)/],
-            ["Firefox", /Firefox\/([\d.]+)/],
-            ["Google Chrome", /Chrome\/([\d.]+)/],
-            ["Safari", /Version\/([\d.]+).*Safari/]
+            {
+                browser: "Microsoft Edge",
+                expression: /EdgA?\/([\d.]+)/
+            },
+            {
+                browser: "Opera",
+                expression: /OPR\/([\d.]+)/
+            },
+            {
+                browser: "Firefox",
+                expression: /Firefox\/([\d.]+)/
+            },
+            {
+                browser: "Google Chrome",
+                expression: /(?:Chrome|CriOS)\/([\d.]+)/
+            },
+            {
+                browser: "Safari",
+                expression: /Version\/([\d.]+).*Safari/
+            }
         ];
 
-        for (const [name, pattern] of patterns) {
-            const match = userAgent.match(pattern);
+        for (const item of patterns) {
+            const match = userAgent.match(item.expression);
 
             if (match) {
-                return `${name} ${match[1]}`;
+                return {
+                    browser: item.browser,
+                    browserVersion: match[1]
+                };
             }
         }
 
-        return NOT_AVAILABLE;
+        return {
+            browser: STATUS.UNKNOWN,
+            browserVersion: STATUS.UNKNOWN
+        };
     }
 
-    function getOperatingSystem() {
+    /* ======================================================================
+       OPERATING SYSTEM
+       ====================================================================== */
+
+    function getOperatingSystemInformation() {
         const userAgent = navigator.userAgent || "";
 
-        const android = userAgent.match(/Android ([\d.]+)/);
+        const result = {
+            operatingSystem: STATUS.UNKNOWN,
+            osVersion: STATUS.NOT_EXPOSED,
+            platform:
+                navigator.userAgentData?.platform ||
+                navigator.platform ||
+                STATUS.UNKNOWN
+        };
+
+        const windowsVersion = getWindowsVersion(userAgent);
+
+        if (windowsVersion) {
+            result.operatingSystem = "Windows";
+            result.osVersion = windowsVersion;
+            return result;
+        }
+
+        const android = userAgent.match(
+            /Android\s+([\d.]+)/
+        );
 
         if (android) {
-            return `Android ${android[1]}`;
+            result.operatingSystem = "Android";
+            result.osVersion = android[1];
+            return result;
         }
 
         const ios = userAgent.match(
-            /(?:iPhone OS|CPU OS) ([\d_]+)/
+            /(?:iPhone OS|CPU OS)\s+([\d_]+)/
         );
 
         if (ios) {
-            return `iOS ${ios[1].replaceAll("_", ".")}`;
+            result.operatingSystem = "iOS";
+            result.osVersion = ios[1].replaceAll("_", ".");
+            return result;
         }
 
-        const macOS = userAgent.match(/Mac OS X ([\d_]+)/);
+        const macOS = userAgent.match(
+            /Mac OS X\s+([\d_]+)/
+        );
 
         if (macOS) {
-            return `macOS ${macOS[1].replaceAll("_", ".")}`;
+            result.operatingSystem = "macOS";
+            result.osVersion =
+                macOS[1].replaceAll("_", ".");
+            return result;
         }
 
-        if (/Windows NT 10\.0/.test(userAgent)) {
+        if (/CrOS/i.test(userAgent)) {
+            result.operatingSystem = "ChromeOS";
+            return result;
+        }
+
+        if (/Linux/i.test(userAgent)) {
+            result.operatingSystem = "Linux";
+            return result;
+        }
+
+        return result;
+    }
+
+    function getWindowsVersion(userAgent) {
+        if (/Windows NT 10\.0/i.test(userAgent)) {
             return "Windows 10 or 11";
         }
 
-        if (/Windows NT 6\.3/.test(userAgent)) {
+        if (/Windows NT 6\.3/i.test(userAgent)) {
             return "Windows 8.1";
         }
 
-        if (/Windows NT 6\.1/.test(userAgent)) {
+        if (/Windows NT 6\.2/i.test(userAgent)) {
+            return "Windows 8";
+        }
+
+        if (/Windows NT 6\.1/i.test(userAgent)) {
             return "Windows 7";
         }
 
-        if (/Linux/.test(userAgent)) {
-            return "Linux";
-        }
-
-        return NOT_AVAILABLE;
+        return null;
     }
 
-    function getArchitecture() {
+    /* ======================================================================
+       USER-AGENT CLIENT HINTS
+       ====================================================================== */
+
+    async function collectHighEntropyInformation() {
+        const userAgentData = navigator.userAgentData;
+
+        if (!userAgentData) {
+            collectArchitectureFallback();
+            return;
+        }
+
+        if (userAgentData.platform) {
+            setValue("platform", userAgentData.platform);
+
+            const currentOs = state.operatingSystem;
+
+            if (
+                currentOs === STATUS.UNKNOWN &&
+                userAgentData.platform
+            ) {
+                setValue(
+                    "operatingSystem",
+                    userAgentData.platform
+                );
+            }
+        }
+
+        if (typeof userAgentData.mobile === "boolean") {
+            setValue(
+                "deviceType",
+                userAgentData.mobile
+                    ? "Mobile device"
+                    : "Desktop or laptop"
+            );
+        }
+
+        if (
+            typeof userAgentData.getHighEntropyValues !==
+            "function"
+        ) {
+            collectArchitectureFallback();
+            return;
+        }
+
+        try {
+            const hints =
+                await userAgentData.getHighEntropyValues([
+                    "architecture",
+                    "bitness",
+                    "model",
+                    "platformVersion",
+                    "fullVersionList"
+                ]);
+
+            if (hints.architecture) {
+                setValue(
+                    "cpuArchitecture",
+                    normalizeArchitecture(
+                        hints.architecture
+                    )
+                );
+            }
+
+            if (hints.bitness) {
+                setValue(
+                    "cpuBitness",
+                    `${hints.bitness}-bit`
+                );
+            }
+
+            if (hints.platformVersion) {
+                setValue(
+                    "osVersion",
+                    interpretPlatformVersion(
+                        userAgentData.platform,
+                        hints.platformVersion
+                    )
+                );
+            }
+
+            const browser =
+                getBrowserFromVersionList(
+                    hints.fullVersionList
+                );
+
+            if (browser) {
+                setValue("browser", browser.browser);
+                setValue(
+                    "browserVersion",
+                    browser.version
+                );
+            }
+
+            if (
+                hints.model &&
+                hints.model.trim() !== ""
+            ) {
+                setValue(
+                    "deviceType",
+                    `${state.deviceType} (${hints.model})`
+                );
+            }
+        } catch (error) {
+            console.warn(
+                "High-detail browser information was unavailable:",
+                error
+            );
+
+            collectArchitectureFallback();
+        }
+    }
+
+    function getBrowserFromVersionList(versionList) {
+        if (!Array.isArray(versionList)) {
+            return null;
+        }
+
+        const preferredBrands = [
+            {
+                brand: "Microsoft Edge",
+                displayName: "Microsoft Edge"
+            },
+            {
+                brand: "Google Chrome",
+                displayName: "Google Chrome"
+            },
+            {
+                brand: "Opera",
+                displayName: "Opera"
+            },
+            {
+                brand: "Chromium",
+                displayName: "Chromium"
+            }
+        ];
+
+        for (const preferred of preferredBrands) {
+            const match = versionList.find(
+                item =>
+                    item.brand === preferred.brand
+            );
+
+            if (match) {
+                return {
+                    browser: preferred.displayName,
+                    version: match.version
+                };
+            }
+        }
+
+        return null;
+    }
+
+    function interpretPlatformVersion(
+        platform,
+        platformVersion
+    ) {
+        if (!platformVersion) {
+            return STATUS.NOT_EXPOSED;
+        }
+
+        if (
+            String(platform).toLowerCase() ===
+            "windows"
+        ) {
+            const majorVersion = Number.parseInt(
+                platformVersion.split(".")[0],
+                10
+            );
+
+            if (Number.isFinite(majorVersion)) {
+                if (majorVersion >= 13) {
+                    return `Windows 11 platform version ${platformVersion}`;
+                }
+
+                if (majorVersion > 0) {
+                    return `Windows platform version ${platformVersion}`;
+                }
+            }
+        }
+
+        return platformVersion;
+    }
+
+    function collectArchitectureFallback() {
         const userAgent = navigator.userAgent || "";
+        const platform = navigator.platform || "";
 
-        if (/arm64|aarch64/i.test(userAgent)) {
-            return "ARM64";
+        const combined = `${userAgent} ${platform}`;
+
+        if (/arm64|aarch64/i.test(combined)) {
+            setValue("cpuArchitecture", "ARM64");
+            setValue("cpuBitness", "64-bit");
+            return;
         }
 
-        if (/arm/i.test(userAgent)) {
-            return "ARM";
+        if (/arm/i.test(combined)) {
+            setValue("cpuArchitecture", "ARM");
+            return;
         }
 
-        if (/win64|x64|x86_64|amd64/i.test(userAgent)) {
-            return "x86-64";
+        if (/win64|x64|x86_64|amd64/i.test(combined)) {
+            setValue("cpuArchitecture", "x86-64");
+            setValue("cpuBitness", "64-bit");
+            return;
         }
 
-        if (/i[3-6]86|x86/i.test(userAgent)) {
+        if (/i[3-6]86|x86/i.test(combined)) {
+            setValue("cpuArchitecture", "x86");
+            setValue("cpuBitness", "32-bit");
+        }
+    }
+
+    function normalizeArchitecture(value) {
+        const architecture =
+            String(value).toLowerCase();
+
+        if (
+            architecture === "x86" ||
+            architecture === "x86_64"
+        ) {
             return "x86";
         }
 
-        return NOT_AVAILABLE;
-    }
-
-    function getLanguages() {
-        if (navigator.languages?.length) {
-            return navigator.languages.join(", ");
+        if (
+            architecture === "arm" ||
+            architecture === "arm64"
+        ) {
+            return architecture.toUpperCase();
         }
 
-        return navigator.language || NOT_AVAILABLE;
+        return value;
     }
 
     /* ======================================================================
-       DISPLAY
+       DEVICE AND HARDWARE
        ====================================================================== */
 
-    function getScreenResolution() {
-        if (!window.screen) {
-            return NOT_AVAILABLE;
+    function getDeviceType() {
+        const userAgent = navigator.userAgent || "";
+
+        if (
+            /iPad|Tablet|PlayBook|Silk/i.test(userAgent)
+        ) {
+            return "Tablet";
         }
 
-        return `${screen.width} × ${screen.height}`;
-    }
-
-    function getAvailableScreen() {
-        if (!window.screen) {
-            return NOT_AVAILABLE;
+        if (
+            /Mobi|Android|iPhone|iPod/i.test(userAgent)
+        ) {
+            return "Mobile device";
         }
 
-        return `${screen.availWidth} × ${screen.availHeight}`;
+        if (navigator.maxTouchPoints > 1) {
+            if (/MacIntel/i.test(navigator.platform)) {
+                return "Tablet";
+            }
+        }
+
+        return "Desktop or laptop";
     }
 
-    function getWindowSize() {
-        return `${window.innerWidth} × ${window.innerHeight}`;
+    function getLogicalProcessors() {
+        const processors =
+            navigator.hardwareConcurrency;
+
+        if (!Number.isFinite(processors)) {
+            return STATUS.NOT_EXPOSED;
+        }
+
+        return String(processors);
     }
 
-    function getPixelRatio() {
-        return Number.isFinite(window.devicePixelRatio)
-            ? String(window.devicePixelRatio)
-            : NOT_AVAILABLE;
+    function getApproximateMemory() {
+        const memory = navigator.deviceMemory;
+
+        if (!Number.isFinite(memory)) {
+            return STATUS.NOT_EXPOSED;
+        }
+
+        return `Approximately ${memory} GB`;
     }
 
-    /* ======================================================================
-       HARDWARE
-       ====================================================================== */
-
-    function getCpuCoreCount() {
-        return Number.isFinite(navigator.hardwareConcurrency)
-            ? String(navigator.hardwareConcurrency)
-            : NOT_AVAILABLE;
-    }
-
-    function getDeviceMemory() {
-        const memory = navigator["deviceMemory"];
-
-        return Number.isFinite(memory)
-            ? `Approximately ${memory} GB`
-            : NOT_AVAILABLE;
-    }
-
-    function getGpuRenderer() {
+    function getGraphicsInformation() {
         const canvas = document.createElement("canvas");
 
         const gl =
@@ -284,7 +724,7 @@
             canvas.getContext("experimental-webgl");
 
         if (!gl) {
-            return NOT_AVAILABLE;
+            return STATUS.NOT_SUPPORTED;
         }
 
         const extension = gl.getExtension(
@@ -292,37 +732,121 @@
         );
 
         if (extension) {
-            return (
-                gl.getParameter(
-                    extension.UNMASKED_RENDERER_WEBGL
-                ) || NOT_AVAILABLE
+            const vendor = gl.getParameter(
+                extension.UNMASKED_VENDOR_WEBGL
             );
+
+            const renderer = gl.getParameter(
+                extension.UNMASKED_RENDERER_WEBGL
+            );
+
+            const details = [
+                cleanGraphicsValue(vendor),
+                cleanGraphicsValue(renderer)
+            ].filter(Boolean);
+
+            if (details.length > 0) {
+                return [...new Set(details)].join(" · ");
+            }
         }
 
-        return gl.getParameter(gl.RENDERER) || NOT_AVAILABLE;
+        const genericVendor = cleanGraphicsValue(
+            gl.getParameter(gl.VENDOR)
+        );
+
+        const genericRenderer = cleanGraphicsValue(
+            gl.getParameter(gl.RENDERER)
+        );
+
+        const genericDetails = [
+            genericVendor,
+            genericRenderer
+        ].filter(Boolean);
+
+        return genericDetails.length > 0
+            ? [...new Set(genericDetails)].join(" · ")
+            : STATUS.NOT_EXPOSED;
     }
 
-    function getTouchSupport() {
-        const points = navigator.maxTouchPoints || 0;
-
-        if (points > 0) {
-            return `${points} touch point${points === 1 ? "" : "s"}`;
+    function cleanGraphicsValue(value) {
+        if (
+            value === undefined ||
+            value === null ||
+            value === ""
+        ) {
+            return null;
         }
 
-        return "Not detected";
+        return String(value).trim();
     }
 
     /* ======================================================================
-       LOCALE
+       DISPLAY
        ====================================================================== */
 
-    function getTimezone() {
-        const timezone =
-            Intl.DateTimeFormat().resolvedOptions().timeZone;
+    function getDisplayInformation() {
+        if (!window.screen) {
+            return {
+                screenResolution: STATUS.NOT_EXPOSED,
+                availableScreenArea: STATUS.NOT_EXPOSED
+            };
+        }
 
-        const offsetMinutes = -new Date().getTimezoneOffset();
-        const sign = offsetMinutes >= 0 ? "+" : "-";
-        const absoluteMinutes = Math.abs(offsetMinutes);
+        return {
+            screenResolution:
+                `${screen.width} × ${screen.height}`,
+
+            availableScreenArea:
+                `${screen.availWidth} × ${screen.availHeight}`
+        };
+    }
+
+    /* ======================================================================
+       LANGUAGE AND LOCALE
+       ====================================================================== */
+
+    function getLocaleInformation() {
+        const resolved =
+            Intl.DateTimeFormat().resolvedOptions();
+
+        return {
+            primaryLanguage:
+                navigator.language ||
+                STATUS.NOT_EXPOSED,
+
+            preferredLanguages:
+                navigator.languages?.length
+                    ? navigator.languages.join(", ")
+                    : navigator.language ||
+                      STATUS.NOT_EXPOSED,
+
+            locale:
+                resolved.locale ||
+                navigator.language ||
+                STATUS.NOT_EXPOSED
+        };
+    }
+
+    /* ======================================================================
+       TIME
+       ====================================================================== */
+
+    function getTimeInformation() {
+        const resolved =
+            Intl.DateTimeFormat().resolvedOptions();
+
+        const timeZone =
+            resolved.timeZone ||
+            STATUS.NOT_EXPOSED;
+
+        const offsetMinutes =
+            -new Date().getTimezoneOffset();
+
+        const sign =
+            offsetMinutes >= 0 ? "+" : "-";
+
+        const absoluteMinutes =
+            Math.abs(offsetMinutes);
 
         const hours = String(
             Math.floor(absoluteMinutes / 60)
@@ -332,309 +856,392 @@
             absoluteMinutes % 60
         ).padStart(2, "0");
 
-        const offset = `UTC${sign}${hours}:${minutes}`;
-
-        return timezone
-            ? `${timezone} · ${offset}`
-            : offset;
+        return {
+            timeZone,
+            utcOffset:
+                `UTC${sign}${hours}:${minutes}`
+        };
     }
 
     /* ======================================================================
-       PRIVACY AND STORAGE
+       PRIVACY SIGNALS
        ====================================================================== */
 
-    function getPrivacySignals() {
+    function getPrivacyInformation() {
         const dntValue =
             navigator.doNotTrack ??
-            window.doNotTrack;
+            window.doNotTrack ??
+            navigator.msDoNotTrack;
 
-        let dnt = NOT_AVAILABLE;
+        let doNotTrack = STATUS.NOT_EXPOSED;
 
         if (dntValue === "1" || dntValue === 1) {
-            dnt = "enabled";
-        } else if (dntValue === "0" || dntValue === 0) {
-            dnt = "not enabled";
+            doNotTrack = "Enabled";
+        } else if (
+            dntValue === "0" ||
+            dntValue === 0
+        ) {
+            doNotTrack = "Not enabled";
+        } else if (dntValue === "unspecified") {
+            doNotTrack = "Unspecified";
         }
 
-        const gpcValue = navigator["globalPrivacyControl"];
+        const gpcValue =
+            navigator.globalPrivacyControl;
 
-        const gpc =
+        const globalPrivacyControl =
             typeof gpcValue === "boolean"
                 ? gpcValue
-                    ? "enabled"
-                    : "not enabled"
-                : NOT_AVAILABLE;
+                    ? "Enabled"
+                    : "Not enabled"
+                : STATUS.NOT_EXPOSED;
 
-        return `DNT: ${dnt} · GPC: ${gpc}`;
-    }
-
-    function getStorageStatus() {
-        const cookies = navigator.cookieEnabled
-            ? "enabled"
-            : "disabled";
-
-        const local = storageWorks("localStorage")
-            ? "available"
-            : NOT_AVAILABLE;
-
-        const session = storageWorks("sessionStorage")
-            ? "available"
-            : NOT_AVAILABLE;
-
-        return (
-            `Cookies: ${cookies} · ` +
-            `localStorage: ${local} · ` +
-            `sessionStorage: ${session}`
-        );
-    }
-
-    function storageWorks(storageName) {
-        try {
-            const storage = window[storageName];
-            const key = "__fingerprint_test__";
-
-            storage.setItem(key, "1");
-            storage.removeItem(key);
-
-            return true;
-        } catch {
-            return false;
-        }
+        return {
+            doNotTrack,
+            globalPrivacyControl
+        };
     }
 
     /* ======================================================================
-       CANVAS HASH
+       NETWORK INFORMATION FROM THE BROWSER
        ====================================================================== */
 
-    async function createCanvasHash() {
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
+    function getConnectionInformation() {
+        const connection =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
 
-        if (!context) {
-            return NOT_AVAILABLE;
+        const result = {
+            onlineStatus:
+                navigator.onLine
+                    ? "Online"
+                    : "Offline",
+
+            effectiveConnectionType:
+                STATUS.NOT_EXPOSED,
+
+            estimatedDownlink:
+                STATUS.NOT_EXPOSED,
+
+            estimatedRoundTripTime:
+                STATUS.NOT_EXPOSED,
+
+            dataSaver:
+                STATUS.NOT_EXPOSED
+        };
+
+        if (!connection) {
+            return result;
         }
 
-        canvas.width = 300;
-        canvas.height = 60;
+        if (connection.effectiveType) {
+            result.effectiveConnectionType =
+                connection.effectiveType;
+        }
 
-        context.fillStyle = "#121212";
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        if (Number.isFinite(connection.downlink)) {
+            result.estimatedDownlink =
+                `${connection.downlink} Mbps`;
+        }
 
-        context.font = "18px Arial";
-        context.fillStyle = "#ffffff";
-        context.fillText(
-            "Fingerprint Mirror 0123456789",
-            10,
-            34
-        );
+        if (Number.isFinite(connection.rtt)) {
+            result.estimatedRoundTripTime =
+                `${connection.rtt} ms`;
+        }
 
-        return hashText(canvas.toDataURL());
+        if (
+            typeof connection.saveData === "boolean"
+        ) {
+            result.dataSaver =
+                connection.saveData
+                    ? "Enabled"
+                    : "Not enabled";
+        }
+
+        return result;
     }
 
     /* ======================================================================
-       AUDIO HASH
+       EXTERNAL IP AND LOCATION LOOKUP
        ====================================================================== */
 
-    async function createAudioHash() {
-        const AudioContext =
-            window.OfflineAudioContext ||
-            window["webkitOfflineAudioContext"];
-
-        if (!AudioContext) {
-            return NOT_AVAILABLE;
-        }
-
-        const context = new AudioContext(1, 5000, 44100);
-        const oscillator = context.createOscillator();
-
-        oscillator.type = "triangle";
-        oscillator.frequency.value = 1000;
-        oscillator.connect(context.destination);
-        oscillator.start();
-
-        const buffer = await context.startRendering();
-        const samples = buffer.getChannelData(0);
-
-        let sampleText = "";
-
-        for (let index = 0; index < samples.length; index += 100) {
-            sampleText += samples[index].toFixed(8);
-        }
-
-        return hashText(sampleText);
-    }
-
-    /* ======================================================================
-       SHA-256
-       ====================================================================== */
-
-    async function hashText(text) {
-        if (!window.crypto?.subtle) {
-            return NOT_AVAILABLE;
-        }
-
-        const bytes = new TextEncoder().encode(text);
-
-        const digest = await crypto.subtle.digest(
-            "SHA-256",
-            bytes
-        );
-
-        return Array.from(new Uint8Array(digest))
-            .map((byte) => byte.toString(16).padStart(2, "0"))
-            .join("");
-    }
-
-    /* ======================================================================
-       PUBLIC IP LOOKUP
-       ====================================================================== */
-
-    async function lookupIp() {
-        const button = document.getElementById(
-            "fingerprint-ip-lookup"
-        );
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Looking up...";
-        }
-
-        setStatus(
-            "Requesting public IP and approximate location..."
-        );
+    async function lookupPublicNetworkInformation() {
+        setValue("publicIp", STATUS.PENDING);
+        setValue("approximateCity", STATUS.PENDING);
+        setValue("region", STATUS.PENDING);
+        setValue("country", STATUS.PENDING);
+        setValue("isp", STATUS.PENDING);
+        setValue("asn", STATUS.PENDING);
 
         try {
             const response = await fetch(
-                "https://ipapi.co/json/"
+                "https://ipapi.co/json/",
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                    cache: "no-store"
+                }
             );
 
             if (!response.ok) {
                 throw new Error(
-                    `IP lookup returned ${response.status}`
+                    `IP lookup returned HTTP ${response.status}.`
                 );
             }
 
             const data = await response.json();
 
+            if (data.error) {
+                throw new Error(
+                    data.reason ||
+                    "The IP service returned an error."
+                );
+            }
+
             setValue(
                 "publicIp",
-                data.ip || NOT_AVAILABLE
+                readLookupValue(data.ip)
             );
-
-            const location = [
-                data.city,
-                data.region,
-                data.country_name
-            ]
-                .filter(Boolean)
-                .join(", ");
 
             setValue(
-                "approximateLocation",
-                location || NOT_AVAILABLE
+                "approximateCity",
+                readLookupValue(data.city)
             );
-
-            const network = [
-                data.org,
-                data.asn
-            ]
-                .filter(Boolean)
-                .join(" · ");
 
             setValue(
-                "ispAndAsn",
-                network || NOT_AVAILABLE
+                "region",
+                readLookupValue(
+                    data.region ||
+                    data.region_code
+                )
             );
 
-            setStatus(
-                "IP lookup complete. Location is approximate."
+            setValue(
+                "country",
+                readLookupValue(
+                    data.country_name ||
+                    data.country
+                )
+            );
+
+            setValue(
+                "isp",
+                readLookupValue(
+                    data.org ||
+                    data.network
+                )
+            );
+
+            setValue(
+                "asn",
+                readLookupValue(data.asn)
             );
         } catch (error) {
-            console.error("IP lookup failed:", error);
+            console.error(
+                "Public network lookup failed:",
+                error
+            );
 
-            setValue("publicIp", "lookup unavailable");
             setValue(
-                "approximateLocation",
-                "lookup unavailable"
+                "publicIp",
+                STATUS.LOOKUP_UNAVAILABLE
             );
-            setValue("ispAndAsn", "lookup unavailable");
 
-            setStatus(
-                "IP lookup was blocked or unavailable."
+            setValue(
+                "approximateCity",
+                STATUS.LOOKUP_UNAVAILABLE
             );
-        } finally {
-            if (button) {
-                button.disabled = false;
-                button.textContent = "Look up my IP";
-            }
+
+            setValue(
+                "region",
+                STATUS.LOOKUP_UNAVAILABLE
+            );
+
+            setValue(
+                "country",
+                STATUS.LOOKUP_UNAVAILABLE
+            );
+
+            setValue(
+                "isp",
+                STATUS.LOOKUP_UNAVAILABLE
+            );
+
+            setValue(
+                "asn",
+                STATUS.LOOKUP_UNAVAILABLE
+            );
         }
     }
 
-    /* ======================================================================
-       COPY JSON
-       ====================================================================== */
-
-    async function copyAsJson() {
-        const output = {};
-
-        for (const key of Object.keys(state)) {
-            output[labels[key]] = state[key];
+    function readLookupValue(value) {
+        if (
+            value === undefined ||
+            value === null ||
+            String(value).trim() === ""
+        ) {
+            return STATUS.NOT_EXPOSED;
         }
 
-        const json = JSON.stringify(output, null, 2);
+        return String(value).trim();
+    }
 
+    /* ======================================================================
+       STATE AND EVENT HELPERS
+       ====================================================================== */
+
+    function safeGet(operation, fallback = STATUS.NOT_EXPOSED) {
         try {
-            await navigator.clipboard.writeText(json);
-            setStatus("All 20 values copied as JSON.");
-        } catch {
-            setStatus("The browser could not copy the JSON.");
+            const result = operation();
+
+            if (
+                result === undefined ||
+                result === null ||
+                result === ""
+            ) {
+                return fallback;
+            }
+
+            return result;
+        } catch (error) {
+            console.warn(
+                "Browser information check failed:",
+                error
+            );
+
+            return fallback;
         }
     }
-
-    /* ======================================================================
-       UI HELPERS
-       ====================================================================== */
 
     function setValue(key, value) {
         const safeValue =
             value === undefined ||
             value === null ||
             value === ""
-                ? NOT_AVAILABLE
-                : String(value);
+                ? STATUS.NOT_EXPOSED
+                : value;
 
         state[key] = safeValue;
 
+        updateExistingElement(key, safeValue);
+        notifySubscribers(key, safeValue);
+    }
+
+    function updateExistingElement(key, value) {
         const element = document.getElementById(
             `fingerprint-${key}`
         );
 
-        if (element) {
-            element.textContent = safeValue;
-            element.title = safeValue;
+        if (!element) {
+            return;
         }
+
+        element.textContent = String(value);
+        element.title = String(value);
     }
 
-    function renderAll() {
-        for (const key of Object.keys(state)) {
-            setValue(key, state[key]);
+    function notifySubscribers(key, value) {
+        const snapshot = { ...state };
+
+        for (const callback of subscribers) {
+            try {
+                callback(snapshot, key, value);
+            } catch (error) {
+                console.error(
+                    "Fingerprint subscriber failed:",
+                    error
+                );
+            }
         }
+
+        document.dispatchEvent(
+            new CustomEvent("fingerprint:updated", {
+                detail: {
+                    key,
+                    value,
+                    data: snapshot
+                }
+            })
+        );
     }
 
-    function setStatus(message) {
-        const status = document.getElementById(
-            "fingerprint-status"
+    /* ======================================================================
+       LIVE NETWORK STATUS
+       ====================================================================== */
+
+    window.addEventListener("online", () => {
+        setValue("onlineStatus", "Online");
+    });
+
+    window.addEventListener("offline", () => {
+        setValue("onlineStatus", "Offline");
+    });
+
+    const connection =
+        navigator.connection ||
+        navigator.mozConnection ||
+        navigator.webkitConnection;
+
+    connection?.addEventListener?.("change", () => {
+        const result =
+            safeGet(getConnectionInformation);
+
+        if (typeof result !== "object") {
+            return;
+        }
+
+        setValue(
+            "onlineStatus",
+            result.onlineStatus
         );
 
-        if (status) {
-            status.textContent = message;
-        }
+        setValue(
+            "effectiveConnectionType",
+            result.effectiveConnectionType
+        );
+
+        setValue(
+            "estimatedDownlink",
+            result.estimatedDownlink
+        );
+
+        setValue(
+            "estimatedRoundTripTime",
+            result.estimatedRoundTripTime
+        );
+
+        setValue(
+            "dataSaver",
+            result.dataSaver
+        );
+    });
+
+    /* ======================================================================
+       AUTOMATIC START
+       ====================================================================== */
+
+    function initialize() {
+        scan().catch(error => {
+            console.error(
+                "Fingerprint scan failed:",
+                error
+            );
+
+            setValue(
+                "scanStatus",
+                "Scan encountered an unexpected error"
+            );
+        });
     }
 
     if (document.readyState === "loading") {
         document.addEventListener(
             "DOMContentLoaded",
-            initialize
+            initialize,
+            { once: true }
         );
     } else {
         initialize();

@@ -662,10 +662,10 @@ body {
 }
 
 #fingerprint-toggle:hover,
-#fingerprint-toggle:focus {
+#fingerprint-toggle:focus-visible {
     color: var(--color-text-bright);
-    outline: none;
     text-decoration: underline;
+    outline: none;
 }
 
 /* Collapsible content -------------------------------------------------- */
@@ -678,19 +678,27 @@ body {
     display: none;
 }
 
-/* Privacy note --------------------------------------------------------- */
+/* Privacy / information note ------------------------------------------ */
 
 .fingerprint-notice {
     margin: 0 0 18px;
     color: var(--color-text-muted);
     font-size: 0.75rem;
-    line-height: 1.45;
+    line-height: 1.5;
 }
 
 /* Groups --------------------------------------------------------------- */
 
+.fingerprint-group {
+    margin-top: 18px;
+}
+
+.fingerprint-group:first-of-type {
+    margin-top: 0;
+}
+
 .fingerprint-group-heading {
-    margin: 18px 0 5px;
+    margin: 0 0 5px;
     padding-bottom: 5px;
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text-muted);
@@ -700,19 +708,15 @@ body {
     text-transform: uppercase;
 }
 
-.fingerprint-group-heading:first-child {
-    margin-top: 0;
-}
-
 /* Label / value rows --------------------------------------------------- */
 
 .fingerprint-row {
     display: grid;
-    grid-template-columns: minmax(120px, 42%) minmax(0, 58%);
-    gap: 10px;
+    grid-template-columns: minmax(140px, 42%) minmax(0, 58%);
+    gap: 12px;
     padding: 5px 0;
     font-size: 0.76rem;
-    line-height: 1.35;
+    line-height: 1.4;
 }
 
 .fingerprint-label {
@@ -726,16 +730,26 @@ body {
     overflow-wrap: anywhere;
 }
 
-/*
- * Canvas and audio SHA-256 hashes are intentionally allowed to wrap.
- * Without this, the 64-character strings can widen the right column.
- */
+/* Longer technical values --------------------------------------------- */
 
-#fingerprint-canvasHash,
-#fingerprint-audioHash {
+.fingerprint-value--technical {
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.69rem;
-    word-break: break-all;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+/* Values unavailable or withheld by the browser ----------------------- */
+
+.fingerprint-value[data-state="unavailable"] {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Values currently being retrieved ------------------------------------ */
+
+.fingerprint-value[data-state="loading"] {
+    color: var(--color-text-muted);
 }
 
 /* Actions -------------------------------------------------------------- */
@@ -761,7 +775,7 @@ body {
 }
 
 .fingerprint-actions button:hover,
-.fingerprint-actions button:focus {
+.fingerprint-actions button:focus-visible {
     border-color: var(--color-accent);
     background: var(--color-surface-hover);
     color: var(--color-text-bright);
@@ -771,15 +785,6 @@ body {
 .fingerprint-actions button:disabled {
     opacity: 0.55;
     cursor: default;
-}
-
-/*
- * The IP lookup is the only action that makes an outside request,
- * so it receives a subtle visual distinction.
- */
-
-#fingerprint-ip-lookup {
-    border-color: var(--color-accent);
 }
 
 /* Status --------------------------------------------------------------- */
@@ -799,6 +804,10 @@ body {
 /* Narrow screens ------------------------------------------------------- */
 
 @media (max-width: 700px) {
+    .fingerprint-header {
+        align-items: flex-start;
+    }
+
     .fingerprint-row {
         grid-template-columns: 1fr;
         gap: 2px;

@@ -690,16 +690,272 @@
     </div>
 </section>
 
-            <!-- Clock -->
-
-            <div
-                id="clock"
-                aria-label="Current time"
-            ></div>
-
+            <!-- Clock --> 
+             <section id="clock-panel" aria-label="Current time"> 
+                <div id="clock" aria-label="Current time" ></div> 
+                <div class="clock-actions"> 
+                    <button id="clock-copy-date" type="button" > Copy ISO Date </button> 
+                    <button id="clock-copy-datetime" type="button" > Copy ISO Date/Time </button> 
+                </div> 
+            </section>
 
         </aside>
 
+<!-- ==================================================
+     UTILITIES
+     Unit Converter + Subnet Calculator
+================================================== -->
+
+<section id="utilities" aria-label="Utilities">
+    <div class="utilities-header">
+        <h2>Utilities</h2>
+    </div>
+
+    <div class="utilities-grid">
+
+        <!-- Unit Converter -->
+        <section
+            id="unit-converter"
+            class="utility-panel"
+            aria-label="Unit Converter"
+        >
+            <h3>Unit Converter</h3>
+
+            <select
+                id="unit-category"
+                aria-label="Conversion category"
+            ></select>
+
+            <div class="unit-conversion-row">
+                <input
+                    id="unit-value-a"
+                    type="number"
+                    step="any"
+                    inputmode="decimal"
+                    placeholder="Value"
+                    aria-label="First value"
+                >
+
+                <select
+                    id="unit-a"
+                    aria-label="First unit"
+                ></select>
+            </div>
+
+            <div class="unit-equals">=</div>
+
+            <div class="unit-conversion-row">
+                <input
+                    id="unit-value-b"
+                    type="number"
+                    step="any"
+                    inputmode="decimal"
+                    placeholder="Value"
+                    aria-label="Second value"
+                >
+
+                <select
+                    id="unit-b"
+                    aria-label="Second unit"
+                ></select>
+            </div>
+        </section>
+
+
+        <!-- Subnet / CIDR Calculator -->
+        <section
+            id="subnet-calculator"
+            class="utility-panel"
+            aria-label="Subnet and CIDR Calculator"
+        >
+            <h3>Subnet / CIDR Calculator</h3>
+
+            <div class="subnet-grid">
+
+                <label for="subnet-ip">
+                    IP Address
+                </label>
+
+                <input
+                    id="subnet-ip"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="192.168.1.100"
+                    autocomplete="off"
+                >
+
+
+                <label for="subnet-cidr">
+                    CIDR
+                </label>
+
+                <input
+                    id="subnet-cidr"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="/24"
+                    autocomplete="off"
+                >
+
+
+                <label for="subnet-mask">
+                    Subnet Mask
+                </label>
+
+                <input
+                    id="subnet-mask"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="255.255.255.0"
+                    autocomplete="off"
+                >
+
+
+                <label for="subnet-gateway">
+                    Gateway
+                </label>
+
+                <input
+                    id="subnet-gateway"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="192.168.1.1"
+                    autocomplete="off"
+                >
+
+
+                <label for="subnet-network">
+                    Network
+                </label>
+
+                <div class="subnet-result-row">
+                    <input
+                        id="subnet-network"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="Network address"
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        data-copy-target="subnet-network"
+                    >
+                        Copy
+                    </button>
+                </div>
+
+
+                <label for="subnet-first">
+                    First Usable
+                </label>
+
+                <div class="subnet-result-row">
+                    <input
+                        id="subnet-first"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="First usable IP"
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        data-copy-target="subnet-first"
+                    >
+                        Copy
+                    </button>
+                </div>
+
+
+                <label for="subnet-last">
+                    Last Usable
+                </label>
+
+                <div class="subnet-result-row">
+                    <input
+                        id="subnet-last"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="Last usable IP"
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        data-copy-target="subnet-last"
+                    >
+                        Copy
+                    </button>
+                </div>
+
+
+                <label for="subnet-broadcast">
+                    Broadcast
+                </label>
+
+                <div class="subnet-result-row">
+                    <input
+                        id="subnet-broadcast"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="Broadcast address"
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        data-copy-target="subnet-broadcast"
+                    >
+                        Copy
+                    </button>
+                </div>
+
+
+                <label for="subnet-total">
+                    Total Addresses
+                </label>
+
+                <input
+                    id="subnet-total"
+                    type="text"
+                    readonly
+                    aria-label="Total addresses"
+                >
+
+
+                <label for="subnet-usable">
+                    Usable Addresses
+                </label>
+
+                <input
+                    id="subnet-usable"
+                    type="text"
+                    readonly
+                    aria-label="Usable addresses"
+                >
+
+            </div>
+
+            <div class="subnet-actions">
+                <button
+                    id="subnet-clear"
+                    type="button"
+                >
+                    Clear
+                </button>
+            </div>
+
+            <div
+                id="subnet-status"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+        </section>
+
+    </div>
+</section>
 
     </main>
 
@@ -707,6 +963,8 @@
 <script src="js/breakout.js"></script>
 <script src="js/weather.js"></script>
 <script src="js/fingerprint.js"></script>
+<script src="js/units.js"></script>
+<script src="js/subnet.js"></script>
 
 </body>
 

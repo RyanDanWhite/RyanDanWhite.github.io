@@ -818,3 +818,260 @@ body {
         width: 100%;
     }
 }
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+#utilities {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-border);
+}
+
+.utilities-header {
+    margin-bottom: 20px;
+}
+
+.utilities-header h2 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.utilities-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.5fr);
+    gap: 40px;
+    align-items: start;
+}
+
+.utility-panel {
+    min-width: 0;
+}
+
+.utility-panel h3 {
+    margin: 0 0 16px;
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   UNIT CONVERTER
+   ========================================================================== */
+
+#unit-category {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 14px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+}
+
+.unit-conversion-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 1fr);
+    gap: 8px;
+}
+
+.unit-conversion-row + .unit-conversion-row {
+    margin-top: 10px;
+}
+
+#unit-value-a,
+#unit-value-b,
+#unit-a,
+#unit-b {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+}
+
+#unit-value-a:focus,
+#unit-value-b:focus,
+#unit-a:focus,
+#unit-b:focus,
+#unit-category:focus {
+    border-color: var(--color-accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.unit-equals {
+    margin: 6px 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* ==========================================================================
+   SUBNET / CIDR CALCULATOR
+   ========================================================================== */
+
+.subnet-grid {
+    display: grid;
+    grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.subnet-grid label {
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+}
+
+.subnet-grid input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.82rem;
+}
+
+.subnet-grid input:focus {
+    border-color: var(--color-accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.subnet-result-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    align-items: center;
+}
+
+.subnet-result-row button,
+#subnet-clear {
+    padding: 7px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.subnet-result-row button:hover,
+.subnet-result-row button:focus,
+#subnet-clear:hover,
+#subnet-clear:focus {
+    border-color: var(--color-accent);
+    background: var(--color-surface-hover);
+    color: var(--color-text-bright);
+    outline: none;
+}
+
+.subnet-actions {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+#subnet-status {
+    margin-top: 10px;
+    min-height: 1em;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+#subnet-status:empty {
+    display: none;
+}
+
+#subnet-status[data-type="error"] {
+    color: #c76a6a;
+}
+
+#subnet-status[data-type="warning"] {
+    color: #c49a5a;
+}
+
+#subnet-status[data-type="success"] {
+    color: var(--color-accent);
+}
+
+/* ==========================================================================
+   CLOCK ACTIONS
+   ========================================================================== */
+
+.clock-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.clock-actions button {
+    padding: 7px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.clock-actions button:hover,
+.clock-actions button:focus {
+    border-color: var(--color-accent);
+    background: var(--color-surface-hover);
+    color: var(--color-text-bright);
+    outline: none;
+}
+
+/* ==========================================================================
+   UTILITIES - RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 900px) {
+    .utilities-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}
+
+@media (max-width: 700px) {
+    .unit-conversion-row {
+        grid-template-columns: 1fr;
+    }
+
+    .subnet-grid {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .subnet-grid label {
+        margin-top: 7px;
+    }
+
+    .clock-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .clock-actions button {
+        width: 100%;
+    }
+}

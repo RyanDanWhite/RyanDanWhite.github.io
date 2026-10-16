@@ -1,0 +1,23 @@
+RDWNET BOOTSTRAP CONTEXT
+Generated: 2026-10-15 14:18:21 -04:00
+Repository: C:\Users\rwhite224\Projects\RDWNET\infrastructure
+
+Purpose:
+Provide repository context necessary to design infrastructure/bootstrap.sh.
+
+IMPORTANT:
+This file intentionally excludes known secrets, credentials, private keys,
+application databases, runtime state, archives, and generated directories.
+
+================================================================================
+REPOSITORY INFORMATION
+================================================================================
+PowerShell:
+7.6.6
+
+Git branch: main
+Git commit: d57bc602deb3fcf55258450abc50853a600f1ba3
+
+================================================================================
+DIRECTORY TREE
+================================================================================

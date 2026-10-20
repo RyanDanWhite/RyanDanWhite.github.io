@@ -5,3 +5,5 @@ __pycache__/
 venv/
 *.env
 .vscode/
+# Local context dumps (never publish)
+*-context.txt
